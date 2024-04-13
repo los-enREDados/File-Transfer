@@ -1,3 +1,4 @@
+import sys
 import socket
 
 #    DIR.archivo
@@ -23,9 +24,10 @@ class Listener:
 
 class Worker:
     def __init__ (self, addressCliente, myIP):
-        self.socketRDT = SocketRDT("SW", addressCliente, myIP)
+        self.socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
 
         self.socketRDT.acceptConnection()
+        print(f"Creo un worker con Puerto: {self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA]}")
         
     def hablar(self):
         data = self.socketRDT.receive_all()
@@ -37,6 +39,10 @@ class Worker:
         self.socketRDT.sendall(message_bytes)
 
 def __main__():
+    if lib.constants.TIPODEPROTOCOLO != "SW" and lib.constants.TIPODEPROTOCOLO != "SR":
+        sys.exit(f'''
+\033[91mERROR\033[0m: Tipo de protocolo desconocido: {lib.constants.TIPODEPROTOCOLO}''')
+
     l = Listener(UDP_IP, UDP_PORT)
     l.listen()
 

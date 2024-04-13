@@ -14,12 +14,12 @@ def main():
     print("UDP target port: %s" % UDP_PORT)
     print("message: %s" % MESSAGE)
 
+    peerAddres = (UDP_IP, UDP_PORT)
+
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    peerAddres = (UDP_IP, UDP_PORT)
-
-    server = SocketRDT("SW", peerAddres, "127.0.0.1")
+    server = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.1")
 
     print(f"Puerto ANTES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
