@@ -6,24 +6,31 @@ UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 MESSAGE = b"Hello, World!"
 
-print("UDP target IP: %s" % UDP_IP)
-print("UDP target port: %s" % UDP_PORT)
-print("message: %s" % MESSAGE)
 
 
 
 
 
 def main():
+    print("UDP target IP: %s" % UDP_IP)
+    print("UDP target port: %s" % UDP_PORT)
+    print("message: %s" % MESSAGE)
+
     sock = socket.socket(socket.AF_INET, # Internet
                     socket.SOCK_DGRAM) # UDP
 
     sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
     data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-    print(addr)
-    print(data)
-    sock.shutdown()
+    print("Recibí de: ", addr)
+    print("Hablo con el nuevo puerto:",data)
+
+    message = "Hola"
+    message_bytes = bytes(f"{message}", 'utf-8')
+    sock.sendto(message_bytes, (UDP_IP, int(data)))
+    print("Mando: ", message)
+    data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+    print ("Recibí", data)
 
     # Me contecto al IP+Puerto "estandar"
     #server = SocketRDT(addr=)
@@ -39,7 +46,7 @@ def main():
     # 
     # 
 
-
+main()
 
 '''
 TCP client.py del libro de 

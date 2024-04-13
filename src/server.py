@@ -3,54 +3,46 @@ import socket
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
  
-sock = socket.socket(socket.AF_INET, # Internet
-                      socket.SOCK_DGRAM) # UDP
-sock.bind((UDP_IP, UDP_PORT))
-
 class Listener:
     
-    def __init__ (self, port):
+    def __init__ (self, ip, port):
         self.port = port
         self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sck.bind((UDP_IP, UDP_PORT))
+        self.sck.bind((ip, port))
 
     def listen(self):
         #Nos da un puerto nuevo cada vez. Fuente: https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
         
-        while True:
-            data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-            nuevoWorker(addres)
-
-            # nuevoCliente = SocketRDT(addr)
-            # nuevoCliente. 
-
-
-#           nuevoSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#           nuevoSocket.
-            # socket.bind((UDP_IP, 0)) 
-        
-            # nuevoSocket = socket.socket(socket.AF_INET, # Internet
-            #                 socket.SOCK_DGRAM) # UDP
-            
-            # sock.bind((UDP_IP, UDP_PORT))
+        # while True:
+            data, addr = self.sck.recvfrom(1024) # buffer size is 1024 bytes
+            print ("el listener recibió: ", data, "\n")
 
             w = Worker(addr)
-            sock.sendall("Habla por acá papi", addr, "\n")
+            message = f'{w.port}'
+            message_bytes = bytes(f"{message}", 'utf-8')
+            self.sck.sendto(message_bytes, (addr[0], addr[1]))
+            print("Pasando al worker")
             w.hablar()
-
-
-            # nuevoCliente = SocketRDT(addr)
-            # print("received message: %s" % data)
-            # #print("received addres: %s" % addr)
-            # print(addr)
+            print ("El control volvió al listener")
 
 class Worker:
     def __init__ (self, addressCliente):
         self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sck.bind((UDP_IP, 0))
         self.port = self.sck.getsockname()[1]
+        self.peer_addr = addressCliente
 
-        # self.comunicacionCliente = SocketRDT(addressCliente)
         
     def hablar(self):
-        self.sck.sendall("Hola capo, te estás comunicando con el worker a traves de: ", self.port, "\n")
+        data, addr = self.sck.recvfrom(1024)
+        print ("El worker recibió: ", data, " de: ", addr, "\n")
+        message = "Tu nariz contra mis bolas :P"
+        message_bytes = bytes(f"{message}", 'utf-8')
+        self.sck.sendto(message_bytes, (addr[0], addr[1]))
+        print ("Cerrando socket con puerto ", self.port, "\n")
+
+def __main__():
+    l = Listener(UDP_IP, UDP_PORT)
+    l.listen()
+
+__main__()
