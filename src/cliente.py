@@ -1,14 +1,12 @@
 import socket
 
-from SocketRDT import SocketRDT
+#    DIR.archivo
+from lib.SocketRDT import SocketRDT
+import lib.constants
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 MESSAGE = b"Hello, World!"
-
-
-
-
 
 
 def main():
@@ -16,35 +14,26 @@ def main():
     print("UDP target port: %s" % UDP_PORT)
     print("message: %s" % MESSAGE)
 
-    sock = socket.socket(socket.AF_INET, # Internet
-                    socket.SOCK_DGRAM) # UDP
+    # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
+    # eso aplique para todos los casos. Esto me hace pensar que ni
+    # hace falta almacenar "myAddress". Para pensar
+    peerAddres = (UDP_IP, UDP_PORT)
 
-    sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
+    server = SocketRDT("SW", peerAddres, "127.0.0.1")
 
-    data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-    print("Recibí de: ", addr)
-    print("Hablo con el nuevo puerto:",data)
+    print(f"Puerto ANTES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    message = "Hola"
-    message_bytes = bytes(f"{message}", 'utf-8')
-    sock.sendto(message_bytes, (UDP_IP, int(data)))
-    print("Mando: ", message)
-    data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-    print ("Recibí", data)
+    server.connect()
 
-    # Me contecto al IP+Puerto "estandar"
-    #server = SocketRDT(addr=)
-    # te envio N bytes
-    # -------------->
-    #puerto = server.init()
+    print(f"Puerto DESPUES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-   # nuevoSocket = 
-    # <------------
-    # Joya, hablame a este puerto
-    # Ok dale
-    # * Creo el puerto *
-    # 
-    # 
+    print("Envio data al servidor")
+    server.sendall(MESSAGE)
+
+    print("Espero data del worker")
+    data = server.receive_all()
+
+    print("Recibí del worker: ", data)
 
 main()
 

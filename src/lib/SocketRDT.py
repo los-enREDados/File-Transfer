@@ -1,4 +1,7 @@
 import socket
+import sys
+
+import lib.constants
 
 class SocketRDT:
     def __init__(self, tipo, peerAddr, myIP):
@@ -23,30 +26,60 @@ class SocketRDT:
 
         self.tipo = tipo
 
-    def sendall(self, tipo):
-        if tipo == "SW":
-            self._sendall_stop_and_wait()
+    def acceptConnection(self):
+        mensaje = b"Buenas tardes, acepto tu conexion. Aca te mando mi addr"
+
+        self.skt.sendto(mensaje, self.peerAddr)
+
+    def connect(self):
+        # ATTENTION: ¿La forma de conectarse es la misma entre stop and
+        # wait y selective repeat?
+        # ATTENTION: el "b" antes del string indica que son bytes
+        mensaje = b"Hola buenas tardes me quiero conectar"
+
+        self.skt.sendto(mensaje, self.peerAddr)
+
+        # Aca, el server me responde. ¿La data es importante? 
+        # Lo importante, es el addres. Esta tiene el puerto con el que
+        # voy a hablar
+        _, addr = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+
+        # Actualizo el peer addres, poniendo ahora el puerto nuevo
+        self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
+
+
+    def sendall(self, mensaje):
+        if self.tipo == "SW":
+            self._sendall_stop_and_wait(mensaje)
         else:
             self._sendall_selective()
         return
 
-    def receive_all(self, tipo):
-        if tipo == "SW":
-            self._receive_stop_and_wait()
+    def receive_all(self, ):
+        if self.tipo == "SW":
+            return self._receive_stop_and_wait()
         else:
-            self._receive_selective()
-        return
+            return self._receive_selective()
 
-    def shutdown(self, tipo):
-        return
+    def shutdown(self, ):
+        sys.exit("NO IMPLEMENTADO")
 
-    def _sendall_stop_and_wait(self,):
+    def _sendall_stop_and_wait(self, mensaje):
+        # WARNING: Esto NO ES ASI DE CORTO PARA NADA.
+        # Solo para el test inicial
+        self.skt.sendto(mensaje, self.peerAddr)
         pass
     def _sendall_selective(self,):
+        sys.exit("NO IMPLEMENTADO")
         pass
 
     def _receive_stop_and_wait(self,):
-        pass
+        # Esto me va a devolver un addr y data.
+        # addr yo "en teoria" ya lo conozco
+        # data es lo importante
+        data, _ = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+
+        return data
 
     def _receive_selective(self,):
-        pass
+        sys.exit("NO IMPLEMENTADO")
