@@ -8,13 +8,6 @@ sock = socket.socket(socket.AF_INET, # Internet
 sock.bind((UDP_IP, UDP_PORT))
 
 
-Co-authored-by: Tomas Fabrizio Orsi <torsi@fi.uba.ar>
-Co-authored-by: LijsTh <lijsth@gmail.com>
-Co-authored-by: Valen1611 <vschneider@fi.uba.ar>
-
-Co-authored-by: Theo Lijs <LijsTh@users.noreply.github.com>
-Co-authored-by: Valen1611 <Valen1611@users.noreply.github.com>
-
 # Con el que estoy hablando
 class SocketRDT:
     def __init__(self, tipo, addr):
