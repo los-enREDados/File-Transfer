@@ -1,7 +1,28 @@
 import socket
 import sys
+import math
+import struct
 
 import lib.constants
+
+# Esto mas que una clase es un struct. Lo hago aparte para que quede
+# mas legible
+class Paquete:
+
+    # ATTENTION: Esto quiere decir que el sequence number va a tener
+    # formato como un uint 32_t. Fuentes:
+    # https://docs.python.org/3/library/struct.html
+    # https://docs.python.org/3/library/struct.html#struct-format-strings
+    SEQUENCE_NUMBER_FORMAT = "I"
+
+    def __init__(self, sequence_number, datos: bytes):
+        sequenceNumberBin = struct.pack(self.SEQUENCE_NUMBER_FORMAT, sequence_number)
+
+        # datos.insert(0, sequenceNumberBin)
+        self.misBytes = bytearray(sequenceNumberBin)
+        self.misBytes.extend(datos)
+
+        
 
 class SocketRDT:
     def __init__(self, tipo, peerAddr, myIP):
@@ -49,8 +70,10 @@ class SocketRDT:
 
 
     def sendall(self, mensaje):
+        mensajeEnBytes = mensaje.encode('utf-8')
+        print(type(mensajeEnBytes))
         if self.tipo == "SW":
-            self._sendall_stop_and_wait(mensaje)
+            self._sendall_stop_and_wait(mensajeEnBytes)
         else:
             self._sendall_selective()
         return
@@ -65,9 +88,30 @@ class SocketRDT:
         sys.exit("NO IMPLEMENTADO")
 
     def _sendall_stop_and_wait(self, mensaje):
-        # WARNING: Esto NO ES ASI DE CORTO PARA NADA.
-        # Solo para el test inicial
-        self.skt.sendto(mensaje, self.peerAddr)
+
+
+        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
+        cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
+
+        for numPaquete in range(cantPaquetesAenviar):
+            # Cada paquete es: primeros 4 bytes para el secuence numbers
+            # siguientes es data
+            indiceInicial = numPaquete*lib.constants.TAMANOPAQUETE
+            indiceFinal = (numPaquete + 1) *lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1 
+
+            payloadActual = mensaje[indiceInicial:indiceFinal]
+            paquete = Paquete(numPaquete, payloadActual)
+
+            self.skt.sendto(paquete.misBytes, self.peerAddr)
+            sys.exit("Sufi")
+
+
+
+
+
+
+
+
         pass
     def _sendall_selective(self,):
         sys.exit("NO IMPLEMENTADO")

@@ -9,6 +9,29 @@ UDP_PORT = 5005
 MESSAGE = b"Hello, World!"
 
 
+# WARNING: Aca leo la TOTALIDAD del archivo y lo cargo en memoria de
+# una simplememente para tener muchos bytes en memoria.
+# TODO: Hacer que esta funcion lea de a muchos bytes. Linea por linea
+# es muy pocos bytes y va a hacer que tarde una banda
+# Que lea de a 1000 bytes? 1024? 3000? Quien sabe
+# Sea lo que sea, que sea una constante
+def mandarArchivo(socketCliente: SocketRDT, archivoNombre: str):
+    with open(archivoNombre, "r") as file:
+        archivo = file.read()
+        print(archivo)
+        print(len(archivo))
+        print(len(archivo.encode('utf-8')))
+        print(len(archivo))
+
+        socketCliente.sendall(archivo)
+
+        # for line in f:
+        #     print(line)
+        #     print(len(line.encode('utf-8')))
+        #     break
+
+    return
+
 def main():
     print("UDP target IP: %s" % UDP_IP)
     print("UDP target port: %s" % UDP_PORT)
@@ -23,7 +46,11 @@ def main():
 
     print(f"Puerto ANTES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    server.connect()
+    # server.connect()
+
+    mandarArchivo(server, "src/data/mensaje.txt")
+    # with open("data/mensaje.txt", "r"):
+        
 
     print(f"Puerto DESPUES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
