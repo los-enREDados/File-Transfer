@@ -8,12 +8,12 @@ import lib.constants
 
 # ATTENTION: Ver comentario "STRUCTS" a pie de pagina
 def intAUint32(numero:int) -> bytes:
-    numeroEnUint = struct.pack(lib.constants.SEQUENCE_NUMBER_FORMAT, numero)
+    numeroEnUint = struct.pack(lib.constants.FORMATORED, numero)
 
     return numeroEnUint
 
 def uint32Aint(bytesATransformar:bytes) -> int:
-    intFinal = struct.unpack(lib.constants.SEQUENCE_NUMBER_FORMAT, bytesATransformar)[0]
+    intFinal = struct.unpack(lib.constants.FORMATORED, bytesATransformar)[0]
 
     return intFinal
 
@@ -238,6 +238,8 @@ class SocketRDT:
 
 ## STRUCTS
 # La "I" quiere decir que el sequence number va a tener
-# formato como un uint 32_t. Fuentes:
+# formato como un uint 32_t.
+# La "!" quiere decir que lo ponga en modo network
+# Fuentes:
 # https://docs.python.org/3/library/struct.html
 # https://docs.python.org/3/library/struct.html#struct-format-strings
