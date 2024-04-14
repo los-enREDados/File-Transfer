@@ -1,5 +1,6 @@
 import sys
 import socket
+import struct
 
 #    DIR.archivo
 from lib.SocketRDT import SocketRDT
@@ -11,13 +12,25 @@ UDP_PORT = 5005
 class Listener:
     
     def __init__ (self, ip, port):
-        self.port = port
-        self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sck.bind((ip, port))
+        # self.port = port
+        # self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # self.sck.bind((ip, port))
+        self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
+                                       (0,0), ip, port)
 
     def listen(self):
-        data, addr = self.sck.recvfrom(1024) # buffer size is 1024 bytes
-        print (f"el listener recibió: {data} de la direccion {addr}")
+        # data, addr = self.sck.recvfrom(1024) # buffer size is 1024 bytes
+
+        addr = self.recieveSocket.acceptConnection()
+
+        # self.socketListen()
+        # print (f"el listener recibió: {data} de la direccion {addr}")
+        # print(f"JAMON JAMON {data[0:4]}")
+        
+        # seqNum = struct.unpack("I", data[0:4])
+
+        # print(f"QUESO QUESO {seqNum}")
+        # print(type(seqNum))
 
         w = Worker(addr, UDP_IP)
         w.hablar()
@@ -26,7 +39,8 @@ class Worker:
     def __init__ (self, addressCliente, myIP):
         self.socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
 
-        self.socketRDT.acceptConnection()
+        self.socketRDT.syncAck()
+
         print(f"Creo un worker con Puerto: {self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA]}")
         
     def hablar(self):

@@ -25,7 +25,7 @@ class Paquete:
         
 
 class SocketRDT:
-    def __init__(self, tipo, peerAddr, myIP):
+    def __init__(self, tipo, peerAddr, myIP, myPort=0):
         # Este socket representa el socket que yo voy a usar de OUTPUT.
         # Si a mi me quieren hablar. Yo tengo que bindear este socket
         # Si yo quiero hablar con alguien, uso la direccion para hablar
@@ -36,7 +36,7 @@ class SocketRDT:
         # nuevo cada vez. Fuente: https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
         # ATTENTION: Necesitamos bindearlo siempre porque tanto cliente
         # como servidor van a enviar y recibir cosas.
-        self.skt.bind((myIP, 0))
+        self.skt.bind((myIP, myPort))
 
         # ATTENTION: No se si hace falta guardar "mi propio address"
         # Lo pongo por si lo llegamos a necesitar
@@ -47,7 +47,15 @@ class SocketRDT:
 
         self.tipo = tipo
 
-    def acceptConnection(self):
+    def acceptConnection(self,):
+        _, addr = self.skt.recvfrom(27) # buffer size is 1024 bytes
+
+        return addr
+        
+
+    def syncAck(self):
+        # Este mensaje podria ser mas corto o no estar directamente
+        # Solo necesitamos mandarle esto para que reciba la direccion
         mensaje = b"Buenas tardes, acepto tu conexion. Aca te mando mi addr"
 
         self.skt.sendto(mensaje, self.peerAddr)
@@ -63,7 +71,7 @@ class SocketRDT:
         # Aca, el server me responde. ¿La data es importante? 
         # Lo importante, es el addres. Esta tiene el puerto con el que
         # voy a hablar
-        _, addr = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+        _, addr = self.skt.recvfrom(37) # buffer size is 1024 bytes
 
         # Actualizo el peer addres, poniendo ahora el puerto nuevo
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
@@ -103,7 +111,6 @@ class SocketRDT:
             paquete = Paquete(numPaquete, payloadActual)
 
             self.skt.sendto(paquete.misBytes, self.peerAddr)
-            sys.exit("Sufi")
 
 
 
@@ -121,7 +128,22 @@ class SocketRDT:
         # Esto me va a devolver un addr y data.
         # addr yo "en teoria" ya lo conozco
         # data es lo importante
-        data, _ = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+
+        self.skt.settimeout(lib.constants.TIMEOUT);
+
+        mensajeFinal = bytearray()
+        while True:
+            data, _ = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+
+            seqNum = struct.unpack("I", data[0:4])[0]
+            message = data[5:]
+            mensajeFinal.extend(message)
+            print(seqNum)
+            print(message)
+
+        # Lo ponemos de vuelta en modo bloqueante:
+        # Fuente: https://docs.python.org/3/library/socket.html#socket.socket.settimeout
+        self.skt.settimeout(None)
 
         return data
 

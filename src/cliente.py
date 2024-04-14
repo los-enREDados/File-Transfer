@@ -46,21 +46,21 @@ def main():
 
     print(f"Puerto ANTES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    # server.connect()
+    server.connect()
 
     mandarArchivo(server, "src/data/mensaje.txt")
     # with open("data/mensaje.txt", "r"):
         
 
-    print(f"Puerto DESPUES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
+    # print(f"Puerto DESPUES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    print("Envio data al servidor")
-    server.sendall(MESSAGE)
+    # print("Envio data al servidor")
+    # server.sendall(MESSAGE)
 
-    print("Espero data del worker")
-    data = server.receive_all()
+    # print("Espero data del worker")
+    # data = server.receive_all()
 
-    print("Recibí del worker: ", data)
+    # print("Recibí del worker: ", data)
 
 main()
 
