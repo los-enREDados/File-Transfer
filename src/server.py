@@ -1,6 +1,6 @@
 import sys
 import socket
-import struct
+# import struct
 
 #    DIR.archivo
 from lib.SocketRDT import SocketRDT

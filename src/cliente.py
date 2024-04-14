@@ -18,10 +18,10 @@ MESSAGE = b"Hello, World!"
 def mandarArchivo(socketCliente: SocketRDT, archivoNombre: str):
     with open(archivoNombre, "r") as file:
         archivo = file.read()
-        print(archivo)
-        print(len(archivo))
-        print(len(archivo.encode('utf-8')))
-        print(len(archivo))
+        # print(archivo)
+        # print(len(archivo))
+        # print(len(archivo.encode('utf-8')))
+        # print(len(archivo))
 
         socketCliente.sendall(archivo)
 
