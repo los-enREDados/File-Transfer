@@ -84,11 +84,9 @@ class SocketRDT:
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
 
 
-    def sendall(self, mensaje):
-        mensajeEnBytes = mensaje.encode('utf-8')
-        print(type(mensajeEnBytes))
+    def sendall(self, mensaje:bytes):
         if self.tipo == "SW":
-            self._sendall_stop_and_wait(mensajeEnBytes)
+            self._sendall_stop_and_wait(mensaje)
         else:
             self._sendall_selective()
         return
@@ -102,7 +100,7 @@ class SocketRDT:
     def shutdown(self, ):
         sys.exit("NO IMPLEMENTADO")
 
-    def _sendall_stop_and_wait(self, mensaje):
+    def _sendall_stop_and_wait(self, mensaje:bytes):
 
 
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE

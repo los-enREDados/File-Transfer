@@ -23,7 +23,8 @@ def mandarArchivo(socketCliente: SocketRDT, archivoNombre: str):
         # print(len(archivo.encode('utf-8')))
         # print(len(archivo))
 
-        socketCliente.sendall(archivo)
+        archivoEnBytes = archivo.encode('utf-8')
+        socketCliente.sendall(archivoEnBytes)
 
         # for line in f:
         #     print(line)
@@ -49,18 +50,6 @@ def main():
     server.connect()
 
     mandarArchivo(server, "src/data/mensaje.txt")
-    # with open("data/mensaje.txt", "r"):
-        
-
-    # print(f"Puerto DESPUES de conectarme: {server.peerAddr[lib.constants.PUERTOTUPLA]}")
-
-    # print("Envio data al servidor")
-    # server.sendall(MESSAGE)
-
-    # print("Espero data del worker")
-    # data = server.receive_all()
-
-    # print("Recibí del worker: ", data)
 
 main()
 
