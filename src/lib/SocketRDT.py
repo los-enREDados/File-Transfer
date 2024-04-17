@@ -96,7 +96,6 @@ class SocketRDT:
         # Actualizo el peer addres, poniendo ahora el puerto nuevo
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
 
-
     def sendall(self, mensaje:bytes):
         if self.tipo == "SW":
             self._sendall_stop_and_wait(mensaje)
@@ -125,9 +124,10 @@ class SocketRDT:
 
         self.skt.settimeout(lib.constants.TIMEOUT);
 
-        test = True
+        test = False
         numPaquete = 0
-        while numPaquete < cantPaquetesAenviar:
+        while numPaquete <= cantPaquetesAenviar:
+
             try:
                 numPaqueteRecibo, _ = self.skt.recvfrom(5)
                 numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
@@ -139,6 +139,9 @@ class SocketRDT:
                     # esto deberia ser SIEMPRE? el numero anterior
                     # por como funciona el stop and wait
                     numPaquete = numPaqueteRecibo
+                    if numPaquete == cantPaquetesAenviar:
+                        break
+
                     raise IndexError
 
                 # Cada paquete es: primeros 4 bytes para el secuence numbers
@@ -160,6 +163,9 @@ class SocketRDT:
 
 
                 numPaquete += 1
+
+                
+
             except TimeoutError:
                 # Volver a ejecutar
                 print("TIMEOUT")
@@ -193,7 +199,7 @@ class SocketRDT:
 
         mensajeFinal = bytearray()
          
-        test = True
+        test = False
 
         seqNum = 0
         while seqNum < cantPaquetes:
@@ -224,6 +230,8 @@ class SocketRDT:
                 print(seqNum)
                 print(message)
 
+                print(f"seq {seqNum}")
+                print(f"cant {cantPaquetes}")
 
                 # numPaquete += 1
             except TimeoutError:

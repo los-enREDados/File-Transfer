@@ -29,16 +29,27 @@ class Worker:
 
         self.socketRDT.syncAck()
 
+        self.socketRDT.receive_all(mensaje)
+
+        if mensaje == "voy a subir":
+            upload()
+        else:
+            download()
+
+
         print(f"Creo un worker con Puerto: {self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA]}")
         
     def hablar(self):
         data = self.socketRDT.receive_all()
-        print ("El worker recibió: ", data, " de: ", self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA], "\n")
+        print ("\033[94mEl worker recibió: ", data.decode('utf-8'), " de: ", self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA], "\n \033[0")
 
         message = data.upper()
         message_bytes = bytes(f"{message}", 'utf-8')
 
         self.socketRDT.sendall(message_bytes)
+    
+    
+
 
 def __main__():
     if lib.constants.TIPODEPROTOCOLO != "SW" and lib.constants.TIPODEPROTOCOLO != "SR":
