@@ -32,6 +32,11 @@ class Paquete:
         self.misBytes.extend(datos)
 
 class SocketRDT:
+    #                                        myPort=0 significa que me
+    #                                        va a dar un puerto random
+    #                                        cada vez. El listener/Server
+    #                                        necesita especificarlo; al
+    #                                        cliente no le importa cual
     def __init__(self, tipo, peerAddr, myIP, myPort=0):
         # Este socket representa el socket que yo voy a usar de OUTPUT.
         # Si a mi me quieren hablar. Yo tengo que bindear este socket
@@ -55,7 +60,12 @@ class SocketRDT:
         self.tipo = tipo
 
     def acceptConnection(self,):
-        _, addr = self.skt.recvfrom(27) # buffer size is 1024 bytes
+        mensajeConeccion = b""
+
+        # Voy a pedir conecciones hasta que alguien me mande el SYN
+        while mensajeConeccion != lib.constants.MENSAJECONECCION:
+            # TODO: Por que puse 27? Nadie lo sabe. Ni yo
+            mensajeConeccion, addr = self.skt.recvfrom(27) # buffer size is 1024 bytes
 
         return addr
         
@@ -63,7 +73,7 @@ class SocketRDT:
     def syncAck(self):
         # Este mensaje podria ser mas corto o no estar directamente
         # Solo necesitamos mandarle esto para que reciba la direccion
-        mensaje = b"Buenas tardes, acepto tu conexion. Aca te mando mi addr"
+        mensaje = lib.constants.MENSAJEACEPTARCONECCION
 
         self.skt.sendto(mensaje, self.peerAddr)
 
@@ -71,14 +81,17 @@ class SocketRDT:
         # ATTENTION: ¿La forma de conectarse es la misma entre stop and
         # wait y selective repeat?
         # ATTENTION: el "b" antes del string indica que son bytes
-        mensaje = b"Hola buenas tardes me quiero conectar"
+        mensaje = lib.constants.MENSAJECONECCION
 
         self.skt.sendto(mensaje, self.peerAddr)
 
-        # Aca, el server me responde. ¿La data es importante? 
-        # Lo importante, es el addres. Esta tiene el puerto con el que
-        # voy a hablar
-        _, addr = self.skt.recvfrom(37) # buffer size is 1024 bytes
+        # ATTENTION: Lo importante, es el addres. Esta tiene el puerto
+        # con el que voy a hablar
+        synAck = b""
+        while synAck != lib.constants.MENSAJEACEPTARCONECCION:
+            # No me interesa lo que me manden HASTA QUE alguien me
+            # mande un SYNACK
+            synAck, addr = self.skt.recvfrom(37) # buffer size is 1024 bytes
 
         # Actualizo el peer addres, poniendo ahora el puerto nuevo
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])

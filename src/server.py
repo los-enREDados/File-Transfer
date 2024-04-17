@@ -12,25 +12,13 @@ UDP_PORT = 5005
 class Listener:
     
     def __init__ (self, ip, port):
-        # self.port = port
-        # self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # self.sck.bind((ip, port))
         self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
                                        (0,0), ip, port)
 
     def listen(self):
-        # data, addr = self.sck.recvfrom(1024) # buffer size is 1024 bytes
-
+        # TODO: Poner en un loop y hacer que esto sea multithread
+        # Cada worker deberia estar en su propio thread
         addr = self.recieveSocket.acceptConnection()
-
-        # self.socketListen()
-        # print (f"el listener recibió: {data} de la direccion {addr}")
-        # print(f"JAMON JAMON {data[0:4]}")
-        
-        # seqNum = struct.unpack("I", data[0:4])
-
-        # print(f"QUESO QUESO {seqNum}")
-        # print(type(seqNum))
 
         w = Worker(addr, UDP_IP)
         w.hablar()
