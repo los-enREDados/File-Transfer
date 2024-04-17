@@ -159,14 +159,11 @@ class SocketRDT:
 
         self.skt.settimeout(None)
 
+        # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
 
-        sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
+        # pass
 
-
-
-
-
-        pass
+        return
     def _sendall_selective(self,):
         sys.exit("NO IMPLEMENTADO")
         pass
@@ -225,8 +222,8 @@ class SocketRDT:
         # Fuente: https://docs.python.org/3/library/socket.html#socket.socket.settimeout
         self.skt.settimeout(None)
 
-        sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
-        return 
+        # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
+        return mensajeFinal
 
     def _receive_selective(self,):
         sys.exit("NO IMPLEMENTADO")
