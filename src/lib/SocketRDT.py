@@ -64,8 +64,7 @@ class SocketRDT:
 
         # Voy a pedir conecciones hasta que alguien me mande el SYN
         while mensajeConeccion != lib.constants.MENSAJECONECCION:
-            # TODO: Por que puse 27? Nadie lo sabe. Ni yo
-            mensajeConeccion, addr = self.skt.recvfrom(27) # buffer size is 1024 bytes
+            mensajeConeccion, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
 
         return addr
         
@@ -91,7 +90,7 @@ class SocketRDT:
         while synAck != lib.constants.MENSAJEACEPTARCONECCION:
             # No me interesa lo que me manden HASTA QUE alguien me
             # mande un SYNACK
-            synAck, addr = self.skt.recvfrom(37) # buffer size is 1024 bytes
+            synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
 
         # Actualizo el peer addres, poniendo ahora el puerto nuevo
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
@@ -129,7 +128,7 @@ class SocketRDT:
         while numPaquete <= cantPaquetesAenviar:
 
             try:
-                numPaqueteRecibo, _ = self.skt.recvfrom(5)
+                numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
                 numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
                 
                 if numPaqueteRecibo != numPaquete:
@@ -191,7 +190,7 @@ class SocketRDT:
         # Esto me va a devolver un addr y data.
         # addr yo "en teoria" ya lo conozco
         # data es lo importante
-        cantPaquetes, _ = self.skt.recvfrom(1024)
+        cantPaquetes, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
         cantPaquetes = uint32Aint(cantPaquetes)
 
 
@@ -219,7 +218,7 @@ class SocketRDT:
                     test = False
                     continue
 
-                data, _ = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+                data, _ = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) # buffer size is 1024 bytes
 
                 seqNum = uint32Aint(data[0:lib.constants.TAMANOHEADER])
                 seqNum += 1
