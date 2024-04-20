@@ -5,7 +5,7 @@ import os
 print(os.getcwd())
 
 #    DIR.archivo
-from lib import SocketRDT
+from lib.SocketRDT import SocketRDT
 import lib.constants
 
 UDP_IP = "127.0.0.1"
