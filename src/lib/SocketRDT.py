@@ -3,6 +3,11 @@ import sys
 import math
 import time
 import struct
+from enum import Enum
+
+class Tipo(Enum):
+    UPLOAD = 1
+    DOWNLOAD = 2
 
 import lib.constants
 
@@ -16,6 +21,16 @@ def uint32Aint(bytesATransformar:bytes) -> int:
     intFinal = struct.unpack(lib.constants.FORMATORED, bytesATransformar)[0]
 
     return intFinal
+
+def strABytes(string: str) -> bytes:
+    strEnBytes = string.encode('utf-8')
+
+    return strEnBytes
+
+def bytesAstr(bytesOrigen: bytes) -> str:
+    stringObtenido = bytesOrigen.decode('utf-8')
+
+    return stringObtenido
 
 
 # Esto mas que una clase es un struct. Lo hago aparte para que quede
@@ -121,7 +136,7 @@ class SocketRDT:
 
         self.skt.sendto(cantPaquetesUint32, self.peerAddr)
 
-        self.skt.settimeout(lib.constants.TIMEOUT);
+        # self.skt.settimeout(lib.constants.TIMEOUT);
 
         test = False
         numPaquete = 0
@@ -194,14 +209,14 @@ class SocketRDT:
         cantPaquetes = uint32Aint(cantPaquetes)
 
 
-        self.skt.settimeout(lib.constants.TIMEOUT);
+        # self.skt.settimeout(lib.constants.TIMEOUT);
 
         mensajeFinal = bytearray()
          
         test = False
 
         seqNum = 0
-        while seqNum < cantPaquetes:
+        while seqNum <= cantPaquetes:
             try:
                 # ATTENTION: Puede parecer extrano que el reciever le
                 # mande el sequence number primero al sender.

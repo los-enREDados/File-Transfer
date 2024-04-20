@@ -5,7 +5,8 @@ import os
 print(os.getcwd())
 
 #    DIR.archivo
-from lib.SocketRDT import SocketRDT
+from lib.SocketRDT import SocketRDT, bytesAstr, uint32Aint
+import lib.ProtocoloFS
 import lib.constants
 
 UDP_IP = "127.0.0.1"
@@ -20,10 +21,29 @@ class Listener:
     def listen(self):
         # TODO: Poner en un loop y hacer que esto sea multithread
         # Cada worker deberia estar en su propio thread
-        addr = self.recieveSocket.acceptConnection()
+        addr  = self.recieveSocket.acceptConnection()
 
-        w = Worker(addr, UDP_IP)
-        w.hablar()
+        worker(addr, UDP_IP)
+        # w = Worker(addr, UDP_IP)
+        # w.hablar()
+
+
+def worker(addressCliente, myIP):
+    socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
+    socketRDT.syncAck()
+
+    tipoYnombre = socketRDT.receive_all()
+    tipo = tipoYnombre[0:len(lib.constants.MENSAJEUPLOAD)]
+    
+    nombreArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
+
+    nombreArchivo = bytesAstr(nombreArchivo)
+
+    # TODO: No me capta el tipo correctamente. Arreglar
+    # if tipo == lib.constants.MENSAJEUPLOAD:
+    lib.ProtocoloFS.recibirArchivo(socketRDT, nombreArchivo)
+
+    
 
 class Worker:
     def __init__ (self, addressCliente, myIP):
