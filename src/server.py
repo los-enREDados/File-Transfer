@@ -1,9 +1,11 @@
 import sys
 import socket
 # import struct
+import os 
+print(os.getcwd())
 
 #    DIR.archivo
-from lib.SocketRDT import SocketRDT
+from lib import SocketRDT
 import lib.constants
 
 UDP_IP = "127.0.0.1"
