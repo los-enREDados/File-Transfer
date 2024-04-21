@@ -14,7 +14,6 @@ import lib.constants
 def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
     # Protocolo de subida de archivos:
     # 1. Cliente envia "upload"
-    # 2. Servidor responde con "ack"
     # 3. Cliente envia el archivo
     # 4. Servidor responde con la cantidad de bytes leidos
 

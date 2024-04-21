@@ -127,8 +127,6 @@ class SocketRDT:
         sys.exit("NO IMPLEMENTADO")
 
     def _sendall_stop_and_wait(self, mensaje:bytes):
-
-
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
@@ -139,6 +137,7 @@ class SocketRDT:
         # self.skt.settimeout(lib.constants.TIMEOUT);
 
         test = False
+
         numPaquete = 0
         while numPaquete <= cantPaquetesAenviar:
 
@@ -204,7 +203,7 @@ class SocketRDT:
     def _receive_stop_and_wait(self,):
         # Esto me va a devolver un addr y data.
         # addr yo "en teoria" ya lo conozco
-        # data es lo importante
+        # data es lo importante. TODO: Chequear misma direccion
         cantPaquetes, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
         cantPaquetes = uint32Aint(cantPaquetes)
 

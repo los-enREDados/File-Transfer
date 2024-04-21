@@ -34,6 +34,7 @@ def worker(addressCliente, myIP):
 
     tipoYnombre = socketRDT.receive_all()
     tipo = tipoYnombre[0:len(lib.constants.MENSAJEUPLOAD)]
+    print(tipo)
     
     nombreArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
 
@@ -45,30 +46,30 @@ def worker(addressCliente, myIP):
 
     
 
-class Worker:
-    def __init__ (self, addressCliente, myIP):
-        self.socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
+# class Worker:
+#     def __init__ (self, addressCliente, myIP):
+#         self.socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
 
-        self.socketRDT.syncAck()
+#         self.socketRDT.syncAck()
 
-        self.socketRDT.receive_all(mensaje)
+#         self.socketRDT.receive_all(mensaje)
 
-        if mensaje == "voy a subir":
-            upload()
-        else:
-            download()
+#         if mensaje == "voy a subir":
+#             upload()
+#         else:
+#             download()
 
 
-        print(f"Creo un worker con Puerto: {self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA]}")
+#         print(f"Creo un worker con Puerto: {self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA]}")
         
-    def hablar(self):
-        data = self.socketRDT.receive_all()
-        print ("\033[94mEl worker recibió: ", data.decode('utf-8'), " de: ", self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA], "\n \033[0")
+#     def hablar(self):
+#         data = self.socketRDT.receive_all()
+#         print ("\033[94mEl worker recibió: ", data.decode('utf-8'), " de: ", self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA], "\n \033[0")
 
-        message = data.upper()
-        message_bytes = bytes(f"{message}", 'utf-8')
+#         message = data.upper()
+#         message_bytes = bytes(f"{message}", 'utf-8')
 
-        self.socketRDT.sendall(message_bytes)
+#         self.socketRDT.sendall(message_bytes)
     
     
 
