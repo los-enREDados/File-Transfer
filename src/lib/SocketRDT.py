@@ -50,9 +50,29 @@ class Paquete:
     def __init__(self, sequence_number, fin, datos: bytes):
         sequenceNumberBin = intAUint32(sequence_number)
         
+        self.seqNum = sequenceNumberBin
+        self.fin = fin
+        self.payload = datos
+
         self.misBytes = bytearray(sequenceNumberBin)
         self.misBytes.extend(fin.to_bytes(1, 'big'))
         self.misBytes.extend(datos)
+    
+    def getPayload(self):        
+        return self.payload
+
+    def getSequenceNumber(self):
+        seqNumLocal = uint32Aint(self.seqNum)
+        return seqNumLocal
+
+    @staticmethod 
+    def Paquete_from_bytes(self, bytes_paquete: bytes):    
+        seqNum = uint32Aint(bytes_paquete[0:lib.constants.TAMANONUMERORED])
+        fin = bytes_paquete[lib.constants.TAMANONUMERORED]
+        payload = bytes_paquete[lib.constants.TAMANOHEADER:]
+        return Paquete(seqNum, fin, payload)
+
+
 
 class SocketRDT:
     #                                        myPort=0 significa que me
@@ -181,21 +201,26 @@ class SocketRDT:
                 # ----------------------------------------------------------------------------------------------------------------------/
                 
                 # Enviamos el paquete
-                self.skt.sendto(paquete.misBytes, self.peerAddr)
+                self.skt.sendto(paquete.getPayload(), self.peerAddr)
 
                 # Recibimos el ACK de que el paquete llego
                 ack_pkt = self._recieve(len(lib.constants.TAMANONUMERORED))
                 
                 if self._pkt_sent_ok(ack_pkt, seqNum):
                     seqNum += 1
+
                 else:
                     continue
-                                
+                    seqNum = 0
                 
             except TimeoutError:
                 # Volver a ejecutar
                 print("TIMEOUT")
                 pass
+            
+            while True:
+                pass
+           
                 # numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
                 # numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
                 
@@ -248,19 +273,52 @@ class SocketRDT:
         # addr yo "en teoria" ya lo conozco
         # data es lo importante. TODO: Chequear misma direccion
         
-        cantPaquetes, _ = self._recieve(lib.constants.TAMANOHEADER)
-        cantPaquetes = uint32Aint(cantPaquetes)
+        # cantPaquetes, _ = self._recieve(lib.constants.TAMANOHEADER)
+        # cantPaquetes = uint32Aint(cantPaquetes)
 
-        self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
+        # self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
         
         # self.skt.settimeout(lib.constants.TIMEOUT);
 
         mensajeFinal = bytearray()
-         
-        test = False
 
-        seqNum = 0
-        while seqNum <= cantPaquetes:
+        es_fin = False
+        ultimoSeqNumACK = -1
+        ultimoSeqNumACK = 5
+        while not es_fin:
+            # Recibo paquete
+            bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE)
+            paquete = Paquete.Paquete_from_bytes(bytes_paquete)
+            
+            seqNumRecibido = paquete.getSequenceNumber() #5
+            
+            # Agrego mi paquete al mensaje final
+            if ultimoSeqNumACK != seqNumRecibido:
+                payload = paquete.getPayload()
+                mensajeFinal.extend(payload)
+
+            es_fin = paquete.fin
+            
+            # Envio ACK
+            seqNumAEnviar = paquete.getSequenceNumber()
+            self.skt.sendto(intAUint32(seqNumAEnviar), self.peerAddr)
+
+        while True:
+            pass
+
+        
+        
+        # empiezo a contar
+        # recibo por las dudas
+        # mando ack
+        #
+
+
+        # test = False
+
+        # seqNum = 0
+        # while seqNum <= cantPaquetes:
+        #     pass
             #
             # try:
 
@@ -301,7 +359,7 @@ class SocketRDT:
 
         # Lo ponemos de vuelta en modo bloqueante:
         # Fuente: https://docs.python.org/3/library/socket.html#socket.socket.settimeout
-        self.skt.settimeout(None)
+        # self.skt.settimeout(None)
 
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
         return mensajeFinal
