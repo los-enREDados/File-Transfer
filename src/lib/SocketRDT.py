@@ -38,12 +38,20 @@ def bytesAstr(bytesOrigen: bytes) -> str:
 class Paquete:
 
     # ATTENTION: Ver comentario "STRUCTS" a pie de pagina
-
-    def __init__(self, sequence_number, datos: bytes):
+    '''
+        |-------------------|
+        | Seq number | Fin  |
+        |------------+------|
+        |                   |
+        |     Data   :D     |
+        |-------------------|
+    '''
+    #                     4 bytes      1 byte
+    def __init__(self, sequence_number, fin, datos: bytes):
         sequenceNumberBin = intAUint32(sequence_number)
-
-        # datos.insert(0, sequenceNumberBin)
+        
         self.misBytes = bytearray(sequenceNumberBin)
+        self.misBytes.extend(fin.to_bytes(1, 'big'))
         self.misBytes.extend(datos)
 
 class SocketRDT:
@@ -126,68 +134,103 @@ class SocketRDT:
     def shutdown(self, ):
         sys.exit("NO IMPLEMENTADO")
 
-    def _sendall_stop_and_wait(self, mensaje:bytes):
+    def _recieve(self, tam) -> bytes:
+        mensaje, addr = self.skt.recvfrom(tam)
+        if addr != self.peerAddr:
+            # Aca no levantaria error, simplemente dropeariamos
+            raise ValueError("Recibi mensaje de una IP que no es mi peer.")
+        
+        return mensaje
+
+    # def _send_stop_and_wait(self,)
+
+    def _pkt_sent_ok(ack_pkt: bytes, seqNum: int):
+        # Aclaracion: El ACK es directamente el numero de 
+        # paquete recibido por el otro
+        seqNumRecibido = uint32Aint(ack_pkt)
+
+        return seqNumRecibido == seqNum
+
+    def _sendall_stop_and_wait(self, mensaje: bytes):
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
+        
+        # Header:
+        # Sequence number
+        # Fin
+        
+        #test = False
 
-        cantPaquetesUint32 = intAUint32(cantPaquetesAenviar)
-
-        self.skt.sendto(cantPaquetesUint32, self.peerAddr)
-
-        # self.skt.settimeout(lib.constants.TIMEOUT);
-
-        test = False
-
-        numPaquete = 0
-        while numPaquete <= cantPaquetesAenviar:
-
-            try:
-                numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
-                numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
+        seqNum = 0
+        while seqNum <= cantPaquetesAenviar:
+            try: 
+                # Armamos un paquete  ---------------------------------------------------------------------------------------------------\                                              
+                                                                                                                                        #|
+                                                                                                                                        #|                
+                indiceInicial = seqNum * lib.constants.TAMANOPAQUETE                                                                    #|
+                indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1     #|           
+                                                                                                                                        #|
+                payloadActual = mensaje[indiceInicial:indiceFinal]                                                                      #|
+                if seqNum == cantPaquetesAenviar:                                                                                       #|
+                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                                       #|
+                else:                                                                                                                   #|
+                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
+                paquete = Paquete                                                                                                       #|
+                                                                                                                                        #|
+                                                                                                                                        #|
+                # ----------------------------------------------------------------------------------------------------------------------/
                 
-                if numPaqueteRecibo != numPaquete:
-                    # Yo le queria enviar un numero distinto; pero
-                    # me dijo que estaba esperando un numero distinto
-                    # en ese caso, tengo que enviarle lo que el espera
-                    # esto deberia ser SIEMPRE? el numero anterior
-                    # por como funciona el stop and wait
-                    numPaquete = numPaqueteRecibo
-                    if numPaquete == cantPaquetesAenviar:
-                        break
+                # Enviamos el paquete
+                self.skt.sendto(paquete.misBytes, self.peerAddr)
 
-                    raise IndexError
-
-                # Cada paquete es: primeros 4 bytes para el secuence numbers
-                # siguientes es data
-                indiceInicial = numPaquete*lib.constants.TAMANOPAQUETE
-                indiceFinal = (numPaquete + 1) *lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1 
-                print(f"Numero paquete: {numPaquete}")
-
-                payloadActual = mensaje[indiceInicial:indiceFinal]
-                paquete = Paquete(numPaquete, payloadActual)
-
-                # WARNING: Este codigo existe solo para dropear un paquete
-                # articifialmente. Lo mismo la variable test
-                if not(numPaquete == 2 and test == True):
-                    self.skt.sendto(paquete.misBytes, self.peerAddr)
+                # Recibimos el ACK de que el paquete llego
+                ack_pkt = self._recieve(len(lib.constants.TAMANONUMERORED))
+                
+                if self._pkt_sent_ok(ack_pkt, seqNum):
+                    seqNum += 1
                 else:
-                    test = False
-                    print("Pierdo un paquete a proposito")
-
-
-                numPaquete += 1
-
+                    continue
+                                
                 
-
             except TimeoutError:
                 # Volver a ejecutar
                 print("TIMEOUT")
                 pass
+                # numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
+                # numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
+                
+                # if numPaqueteRecibo != numPaquete:
+                #     # Yo le queria enviar un numero distinto; pero
+                #     # me dijo que estaba esperando un numero distinto
+                #     # en ese caso, tengo que enviarle lo que el espera
+                #     # esto deberia ser SIEMPRE? el numero anterior
+                #     # por como funciona el stop and wait
+                #     numPaquete = numPaqueteRecibo
+                #     if numPaquete == cantPaquetesAenviar:
+                #         break
 
-            except IndexError:
-                # Volver a ejecutar
-                print("El otro perdio")
-                pass
+                #     raise IndexError
+
+                # # Cada paquete es: primeros 4 bytes para el secuence numbers
+                # # siguientes es data
+                # indiceInicial = numPaquete*lib.constants.TAMANOPAQUETE
+                # indiceFinal = (numPaquete + 1) *lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1 
+                # print(f"Numero paquete: {numPaquete}")
+
+                # payloadActual = mensaje[indiceInicial:indiceFinal]
+                # paquete = Paquete(numPaquete, payloadActual)
+
+                # # WARNING: Este codigo existe solo para dropear un paquete
+                # # articifialmente. Lo mismo la variable test
+                # if not(numPaquete == 2 and test == True):
+                #     self.skt.sendto(paquete.misBytes, self.peerAddr)
+                # else:
+                #     test = False
+                #     print("Pierdo un paquete a proposito")
+
+
+                # numPaquete += 1
+
 
         self.skt.settimeout(None)
 
@@ -204,10 +247,12 @@ class SocketRDT:
         # Esto me va a devolver un addr y data.
         # addr yo "en teoria" ya lo conozco
         # data es lo importante. TODO: Chequear misma direccion
-        cantPaquetes, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
+        
+        cantPaquetes, _ = self._recieve(lib.constants.TAMANOHEADER)
         cantPaquetes = uint32Aint(cantPaquetes)
 
-
+        self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
+        
         # self.skt.settimeout(lib.constants.TIMEOUT);
 
         mensajeFinal = bytearray()
@@ -216,41 +261,43 @@ class SocketRDT:
 
         seqNum = 0
         while seqNum <= cantPaquetes:
-            try:
-                # ATTENTION: Puede parecer extrano que el reciever le
-                # mande el sequence number primero al sender.
-                # Es medio raro.
-                # Esta fue la mejor solucion que se me ocurrio al
-                # problema de "Que pasa si EL SENDER" tiene timeout
-                numPaqueteActualUint = intAUint32(seqNum)
-                self.skt.sendto(numPaqueteActualUint, self.peerAddr)
+            #
+            # try:
 
-                # WARNING: Este codigo existe solo para dropear un paquete
-                # articifialmente. Lo mismo la variable test
-                if seqNum == 3 and test == True:
-                    print("Pierdo paquete")
-                    test = False
-                    continue
+                # # ATTENTION: Puede parecer extrano que el reciever le
+                # # mande el sequence number primero al sender.
+                # # Es medio raro.
+                # # Esta fue la mejor solucion que se me ocurrio al
+                # # problema de "Que pasa si EL SENDER" tiene timeout
+                # numPaqueteActualUint = intAUint32(seqNum)
+                # self.skt.sendto(numPaqueteActualUint, self.peerAddr)
 
-                data, _ = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) # buffer size is 1024 bytes
+                # # WARNING: Este codigo existe solo para dropear un paquete
+                # # articifialmente. Lo mismo la variable test
+                # if seqNum == 3 and test == True:
+                #     print("Pierdo paquete")
+                #     test = False
+                #     continue
 
-                seqNum = uint32Aint(data[0:lib.constants.TAMANOHEADER])
-                seqNum += 1
+                # data, _ = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) # buffer size is 1024 bytes
 
-                message = data[lib.constants.TAMANOHEADER + 1:]
+                # seqNum = uint32Aint(data[0:lib.constants.TAMANOHEADER])
+                # seqNum += 1
 
-                mensajeFinal.extend(message)
-                print(seqNum)
-                print(message)
+                # message = data[lib.constants.TAMANOHEADER + 1:]
 
-                print(f"seq {seqNum}")
-                print(f"cant {cantPaquetes}")
+                # mensajeFinal.extend(message)
+                # print(seqNum)
+                # print(message)
+
+                # print(f"seq {seqNum}")
+                # print(f"cant {cantPaquetes}")
 
                 # numPaquete += 1
-            except TimeoutError:
-                # Volver a ejecutar
-                print("TIMEOUT")
-                pass
+            # except TimeoutError:
+            #     # Volver a ejecutar
+            #     print("TIMEOUT")
+            #     pass
 
         # Lo ponemos de vuelta en modo bloqueante:
         # Fuente: https://docs.python.org/3/library/socket.html#socket.socket.settimeout
@@ -272,3 +319,22 @@ class SocketRDT:
 # Fuentes:
 # https://docs.python.org/3/library/struct.html
 # https://docs.python.org/3/library/struct.html#struct-format-strings
+        '''
+        
+
+        | 0     | 0         |
+        |                   |
+        |     Data          |
+        |                   |
+
+        | 1     | 0         |
+        |                   |
+        |     Data          |
+        |                   |
+
+        | 2     | 1         |
+        |                   |
+        |     Data          |
+        |                   |
+        
+        '''
