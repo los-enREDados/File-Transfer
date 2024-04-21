@@ -1,4 +1,4 @@
-from lib.SocketRDT import SocketRDT
+from lib.SocketRDT import SocketRDT, Tipo
 import lib.constants
 import lib.ProtocoloFS
 from sys import argv
@@ -26,7 +26,7 @@ def upload(path):
     serverSCK.connect()
 
     
-    lib.ProtocoloFS.mandarArchivo(serverSCK, "../"+path)
+    lib.ProtocoloFS.mandarArchivo(serverSCK, path)
 
 
 def main():

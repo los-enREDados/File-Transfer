@@ -3,6 +3,11 @@ import sys
 import math
 import time
 import struct
+from enum import Enum
+
+class Tipo(Enum):
+    UPLOAD = 1
+    DOWNLOAD = 2
 
 import lib.constants
 
@@ -16,6 +21,16 @@ def uint32Aint(bytesATransformar:bytes) -> int:
     intFinal = struct.unpack(lib.constants.FORMATORED, bytesATransformar)[0]
 
     return intFinal
+
+def strABytes(string: str) -> bytes:
+    strEnBytes = string.encode('utf-8')
+
+    return strEnBytes
+
+def bytesAstr(bytesOrigen: bytes) -> str:
+    stringObtenido = bytesOrigen.decode('utf-8')
+
+    return stringObtenido
 
 
 # Esto mas que una clase es un struct. Lo hago aparte para que quede
@@ -64,8 +79,7 @@ class SocketRDT:
 
         # Voy a pedir conecciones hasta que alguien me mande el SYN
         while mensajeConeccion != lib.constants.MENSAJECONECCION:
-            # TODO: Por que puse 27? Nadie lo sabe. Ni yo
-            mensajeConeccion, addr = self.skt.recvfrom(27) # buffer size is 1024 bytes
+            mensajeConeccion, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
 
         return addr
         
@@ -91,7 +105,7 @@ class SocketRDT:
         while synAck != lib.constants.MENSAJEACEPTARCONECCION:
             # No me interesa lo que me manden HASTA QUE alguien me
             # mande un SYNACK
-            synAck, addr = self.skt.recvfrom(37) # buffer size is 1024 bytes
+            synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
 
         # Actualizo el peer addres, poniendo ahora el puerto nuevo
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
@@ -113,8 +127,6 @@ class SocketRDT:
         sys.exit("NO IMPLEMENTADO")
 
     def _sendall_stop_and_wait(self, mensaje:bytes):
-
-
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
@@ -122,14 +134,15 @@ class SocketRDT:
 
         self.skt.sendto(cantPaquetesUint32, self.peerAddr)
 
-        self.skt.settimeout(lib.constants.TIMEOUT);
+        # self.skt.settimeout(lib.constants.TIMEOUT);
 
         test = False
+
         numPaquete = 0
         while numPaquete <= cantPaquetesAenviar:
 
             try:
-                numPaqueteRecibo, _ = self.skt.recvfrom(5)
+                numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
                 numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
                 
                 if numPaqueteRecibo != numPaquete:
@@ -190,19 +203,19 @@ class SocketRDT:
     def _receive_stop_and_wait(self,):
         # Esto me va a devolver un addr y data.
         # addr yo "en teoria" ya lo conozco
-        # data es lo importante
-        cantPaquetes, _ = self.skt.recvfrom(1024)
+        # data es lo importante. TODO: Chequear misma direccion
+        cantPaquetes, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
         cantPaquetes = uint32Aint(cantPaquetes)
 
 
-        self.skt.settimeout(lib.constants.TIMEOUT);
+        # self.skt.settimeout(lib.constants.TIMEOUT);
 
         mensajeFinal = bytearray()
          
         test = False
 
         seqNum = 0
-        while seqNum < cantPaquetes:
+        while seqNum <= cantPaquetes:
             try:
                 # ATTENTION: Puede parecer extrano que el reciever le
                 # mande el sequence number primero al sender.
@@ -219,7 +232,7 @@ class SocketRDT:
                     test = False
                     continue
 
-                data, _ = self.skt.recvfrom(1024) # buffer size is 1024 bytes
+                data, _ = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) # buffer size is 1024 bytes
 
                 seqNum = uint32Aint(data[0:lib.constants.TAMANOHEADER])
                 seqNum += 1
