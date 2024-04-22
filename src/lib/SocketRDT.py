@@ -195,16 +195,16 @@ class SocketRDT:
                 indiceInicial = seqNum * lib.constants.TAMANOPAQUETE                                                                    #|
                 indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1     #|           
                                                                                                                                         #|
-                payloadActual = mensaje[indiceInicial:indiceFinal]
-                
-                                                                       #|
-                                                                                      #|
-                if seqNum == cantPaquetesAenviar:                                                                                  #|
-                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)
-                else:
-                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                              #|
-                                                                       #|
-                                                                                                                       #|
+                payloadActual = mensaje[indiceInicial:indiceFinal]                                                                      #|
+                                                                                                                                        #|
+                                                                                                                                        #|
+                                                                                                                                        #|
+                if seqNum == cantPaquetesAenviar:                                                                                       #|
+                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
+                else:                                                                                                                   #|
+                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                                       #|
+                                                                                                                                        #|
+                                                                                                                                        #|
                                                                                                                                         #|
                                                                                                                                         #|
                 # ----------------------------------------------------------------------------------------------------------------------/
