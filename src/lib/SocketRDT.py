@@ -213,8 +213,7 @@ class SocketRDT:
                 print("+-----enviando paquete:------+")
                 print(f"|  seqNum: {seqNum}")
                 print(f"|  fin: {paquete.fin}")
-                #print(f"|  payload: {payloadActual}")
-                
+                print(f"|  payload: {payloadActual}")
                 print(f"+-----------------------------+")
             
    
@@ -313,13 +312,15 @@ class SocketRDT:
             print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
 
             # Recibo paquete
-            bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE)
+            bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
+            print("\033[93m")
+            print(bytes_paquete)
+            print('\033[0m')
             print("+-----paquete recibido:------+")
             print(f"|  seqNum: {paquete.getSequenceNumber()}")
             print(f"|  fin: {paquete.fin}")
-            #print(f"|  payload: {paquete.payload}")
-            
+            print(f"|  payload: {paquete.payload}")
             print(f"+-----------------------------+")
 
             seqNumRecibido = paquete.getSequenceNumber() #5
