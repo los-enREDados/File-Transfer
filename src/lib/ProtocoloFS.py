@@ -23,6 +23,7 @@ def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
 
     
     serverSCK.sendall(mensaje)
+  
     # ack = serverSCK.receive_all()
     # if ack != "ack":
     #     print("Error en la conexión")
@@ -31,7 +32,6 @@ def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
     with open(archivoNombre, "rb") as file:
         archivo = file.read()
         # print color red
-
         serverSCK.sendall(archivo)
 
     # bytes_read = serverSCK.receive_all()

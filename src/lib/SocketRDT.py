@@ -197,10 +197,12 @@ class SocketRDT:
                                                                                                                                         #|
                 payloadActual = mensaje[indiceInicial:indiceFinal]
                 
-                paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                                       #|
+                                                                       #|
                                                                                       #|
                 if seqNum == cantPaquetesAenviar:                                                                                  #|
-                    paquete.fin = lib.constants.FIN                                                 #|
+                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)
+                else:
+                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                              #|
                                                                        #|
                                                                                                                        #|
                                                                                                                                         #|
@@ -211,7 +213,8 @@ class SocketRDT:
                 print("+-----enviando paquete:------+")
                 print(f"|  seqNum: {seqNum}")
                 print(f"|  fin: {paquete.fin}")
-                print(f"|  payload: {payloadActual}")
+                #print(f"|  payload: {payloadActual}")
+                
                 print(f"+-----------------------------+")
             
    
@@ -313,9 +316,10 @@ class SocketRDT:
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE)
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
             print("+-----paquete recibido:------+")
-            print(f"|  seqNum: {paquete.seqNum}")
+            print(f"|  seqNum: {paquete.getSequenceNumber()}")
             print(f"|  fin: {paquete.fin}")
-            print(f"|  payload: {paquete.payload}")
+            #print(f"|  payload: {paquete.payload}")
+            
             print(f"+-----------------------------+")
 
             seqNumRecibido = paquete.getSequenceNumber() #5

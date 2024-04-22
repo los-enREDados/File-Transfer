@@ -4,6 +4,7 @@ import socket
 import os 
 print(os.getcwd())
 
+
 #    DIR.archivo
 from lib.SocketRDT import SocketRDT, bytesAstr, uint32Aint
 import lib.ProtocoloFS
@@ -11,7 +12,9 @@ import lib.constants
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
- 
+
+SERVER_PATH = "../data/server/"
+
 class Listener:
     
     def __init__ (self, ip, port):
@@ -34,15 +37,21 @@ def worker(addressCliente, myIP):
 
     tipoYnombre = socketRDT.receive_all()
     tipo = tipoYnombre[0:len(lib.constants.MENSAJEUPLOAD)]
-    print(tipo)
+    # Con esto vemos si es upload (UPL) o Download (DOW)
+    # Por ahora que solo estamos implementando upload no lo usamos
     
-    nombreArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
+    pathArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
 
-    nombreArchivo = bytesAstr(nombreArchivo)
-
+    pathArchivo = bytesAstr(pathArchivo)
+    nombreArchivo = pathArchivo.split("/")[-1]
+    
     # TODO: No me capta el tipo correctamente. Arreglar
     # if tipo == lib.constants.MENSAJEUPLOAD:
-    lib.ProtocoloFS.recibirArchivo(socketRDT, nombreArchivo)
+    archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
+    
+    
+    with open(SERVER_PATH + nombreArchivo, "wb") as file:
+        file.write(archivo_recibido)
 
     
 
