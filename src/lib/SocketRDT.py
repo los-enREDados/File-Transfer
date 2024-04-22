@@ -66,7 +66,7 @@ class Paquete:
         return seqNumLocal
 
     @staticmethod 
-    def Paquete_from_bytes(self, bytes_paquete: bytes):    
+    def Paquete_from_bytes(bytes_paquete: bytes):    
         seqNum = uint32Aint(bytes_paquete[0:lib.constants.TAMANONUMERORED])
         fin = bytes_paquete[lib.constants.TAMANONUMERORED]
         payload = bytes_paquete[lib.constants.TAMANOHEADER:]
@@ -164,7 +164,7 @@ class SocketRDT:
 
     # def _send_stop_and_wait(self,)
 
-    def _pkt_sent_ok(ack_pkt: bytes, seqNum: int):
+    def _pkt_sent_ok(self, ack_pkt: bytes, seqNum: int):
         # Aclaracion: El ACK es directamente el numero de 
         # paquete recibido por el otro
         seqNumRecibido = uint32Aint(ack_pkt)
@@ -172,17 +172,22 @@ class SocketRDT:
         return seqNumRecibido == seqNum
 
     def _sendall_stop_and_wait(self, mensaje: bytes):
+        print("\033[92m")
+        print("==================INICIO SENDALL==================")
+        print("\033[0m")
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
-        
         # Header:
         # Sequence number
         # Fin
         
         #test = False
+        print(f"cantPaquetesAenviar: {cantPaquetesAenviar}")
 
         seqNum = 0
         while seqNum <= cantPaquetesAenviar:
+            print(f"************PAQUETE SEQNUM: {seqNum}************")
+           
             try: 
                 # Armamos un paquete  ---------------------------------------------------------------------------------------------------\                                              
                                                                                                                                         #|
@@ -190,21 +195,30 @@ class SocketRDT:
                 indiceInicial = seqNum * lib.constants.TAMANOPAQUETE                                                                    #|
                 indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1     #|           
                                                                                                                                         #|
-                payloadActual = mensaje[indiceInicial:indiceFinal]                                                                      #|
-                if seqNum == cantPaquetesAenviar:                                                                                       #|
-                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                                       #|
-                else:                                                                                                                   #|
-                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
-                paquete = Paquete                                                                                                       #|
+                payloadActual = mensaje[indiceInicial:indiceFinal]
+                
+                paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                                       #|
+                                                                                      #|
+                if seqNum == cantPaquetesAenviar:                                                                                  #|
+                    paquete.fin = lib.constants.FIN                                                 #|
+                                                                       #|
+                                                                                                                       #|
                                                                                                                                         #|
                                                                                                                                         #|
                 # ----------------------------------------------------------------------------------------------------------------------/
                 
                 # Enviamos el paquete
-                self.skt.sendto(paquete.getPayload(), self.peerAddr)
+                print("+-----enviando paquete:------+")
+                print(f"|  seqNum: {seqNum}")
+                print(f"|  fin: {paquete.fin}")
+                print(f"|  payload: {payloadActual}")
+                print(f"+-----------------------------+")
+            
+   
+                self.skt.sendto(paquete.misBytes, self.peerAddr)
 
                 # Recibimos el ACK de que el paquete llego
-                ack_pkt = self._recieve(len(lib.constants.TAMANONUMERORED))
+                ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
                 
                 if self._pkt_sent_ok(ack_pkt, seqNum):
                     seqNum += 1
@@ -218,9 +232,6 @@ class SocketRDT:
                 print("TIMEOUT")
                 pass
             
-            while True:
-                pass
-           
                 # numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
                 # numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
                 
@@ -256,14 +267,19 @@ class SocketRDT:
 
                 # numPaquete += 1
 
-
+  
         self.skt.settimeout(None)
-
+    
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
 
         # pass
-
+        print("\033[92m")
+        print("==================TERMINO SENDALL==================")
+        print("\033[0m")
         return
+    
+
+
     def _sendall_selective(self,):
         sys.exit("NO IMPLEMENTADO")
         pass
@@ -279,17 +295,29 @@ class SocketRDT:
         # self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
         
         # self.skt.settimeout(lib.constants.TIMEOUT);
+        print("\033[93m")
+        print("==================INICIO RECEIVEALL==================")
+        print("\033[0m")
 
+
+        
         mensajeFinal = bytearray()
 
         es_fin = False
         ultimoSeqNumACK = -1
-        ultimoSeqNumACK = 5
         while not es_fin:
+
+            print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
+
             # Recibo paquete
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE)
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
-            
+            print("+-----paquete recibido:------+")
+            print(f"|  seqNum: {paquete.seqNum}")
+            print(f"|  fin: {paquete.fin}")
+            print(f"|  payload: {paquete.payload}")
+            print(f"+-----------------------------+")
+
             seqNumRecibido = paquete.getSequenceNumber() #5
             
             # Agrego mi paquete al mensaje final
@@ -297,16 +325,14 @@ class SocketRDT:
                 payload = paquete.getPayload()
                 mensajeFinal.extend(payload)
 
+            ultimoSeqNumACK = seqNumRecibido
+
+
             es_fin = paquete.fin
             
             # Envio ACK
             seqNumAEnviar = paquete.getSequenceNumber()
             self.skt.sendto(intAUint32(seqNumAEnviar), self.peerAddr)
-
-        while True:
-            pass
-
-        
         
         # empiezo a contar
         # recibo por las dudas
@@ -362,6 +388,10 @@ class SocketRDT:
         # self.skt.settimeout(None)
 
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
+
+        print("\033[93m")
+        print("==================TERMINO RECEIVEALL==================")
+        print("\033[0m")
         return mensajeFinal
 
     def _receive_selective(self,):
