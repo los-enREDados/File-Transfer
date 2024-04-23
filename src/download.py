@@ -26,7 +26,7 @@ def download(path):
     serverSCK.connect()
    
 
-    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../"+path)
+    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../data/server/"+path)
 
     with open("../data/cliente/" + path, "wb") as file:
         file.write(archivo)

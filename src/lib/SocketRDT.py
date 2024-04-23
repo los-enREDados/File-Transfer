@@ -321,6 +321,7 @@ class SocketRDT:
 
             # Recibo paquete
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
+       
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
             print("\033[93m")
             print(bytes_paquete)

@@ -41,17 +41,34 @@ def worker(addressCliente, myIP):
     # Por ahora que solo estamos implementando upload no lo usamos
     
     pathArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
-
     pathArchivo = bytesAstr(pathArchivo)
-    nombreArchivo = pathArchivo.split("/")[-1]
+
+    if tipo == lib.constants.MENSAJEUPLOAD:
+
+        nombreArchivo = pathArchivo.split("/")[-1]
     
-    # TODO: No me capta el tipo correctamente. Arreglar
-    # if tipo == lib.constants.MENSAJEUPLOAD:
-    archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
+        # TODO: No me capta el tipo correctamente. Arreglar
+        # if tipo == lib.constants.MENSAJEUPLOAD:
+        #archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
+        archivo_recibido = socketRDT.receive_all()
     
-    
-    with open(SERVER_PATH + nombreArchivo, "wb") as file:
-        file.write(archivo_recibido)
+        with open(SERVER_PATH + nombreArchivo, "wb") as file:
+            file.write(archivo_recibido)
+
+
+    elif tipo == lib.constants.MENSAJEDOWNLOAD:
+        socketRDT.sendall("ack".encode())
+
+        try: 
+            with open(pathArchivo, "rb") as file:
+                archivo = file.read()
+            
+                socketRDT.sendall(archivo)
+                
+        except FileNotFoundError:
+            print(f"El archivo {pathArchivo} no existe")
+            
+
 
     
 
