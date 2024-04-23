@@ -107,8 +107,9 @@ class SocketRDT:
 
         # Voy a pedir conecciones hasta que alguien me mande el SYN
         while mensajeConeccion != lib.constants.MENSAJECONECCION:
+            print(f"Server esperando conexiones en {self.myAddress}")
             mensajeConeccion, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
-
+            print(f"Recibi {mensajeConeccion} mensaje de {addr}")
         return addr
         
 
@@ -172,9 +173,9 @@ class SocketRDT:
         return seqNumRecibido == seqNum
 
     def _sendall_stop_and_wait(self, mensaje: bytes):
-        print("\033[92m")
-        print("==================INICIO SENDALL==================")
-        print("\033[0m")
+        # print("\033[92m")
+        # print("==================INICIO SENDALL==================")
+        # print("\033[0m")
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
         # Header:
@@ -186,7 +187,7 @@ class SocketRDT:
 
         seqNum = 0
         while seqNum <= cantPaquetesAenviar:
-            print(f"************PAQUETE SEQNUM: {seqNum}************")
+            #print(f"************PAQUETE SEQNUM: {seqNum}************")
            
             try: 
                 #------------------------------------------------------------------------------------------------------------------------\
@@ -218,11 +219,11 @@ class SocketRDT:
                 # ----------------------------------------------------------------------------------------------------------------------/
                 
                 # Enviamos el paquete
-                print("+-----enviando paquete:------+")
-                print(f"|  seqNum: {seqNum}")
-                print(f"|  fin: {paquete.fin}")
-                print(f"|  payload: {payloadActual}")
-                print(f"+-----------------------------+")
+                # print("+-----enviando paquete:------+")
+                # print(f"|  seqNum: {seqNum}")
+                # print(f"|  fin: {paquete.fin}")
+                # print(f"|  payload: {payloadActual}")
+                # print(f"+-----------------------------+")
             
    
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
@@ -283,9 +284,9 @@ class SocketRDT:
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
 
         # pass
-        print("\033[92m")
-        print("==================TERMINO SENDALL==================")
-        print("\033[0m")
+        # print("\033[92m")
+        # print("==================TERMINO SENDALL==================")
+        # print("\033[0m")
         return
     
 
@@ -305,9 +306,9 @@ class SocketRDT:
         # self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
         
         # self.skt.settimeout(lib.constants.TIMEOUT);
-        print("\033[93m")
-        print("==================INICIO RECEIVEALL==================")
-        print("\033[0m")
+        # print("\033[93m")
+        # print("==================INICIO RECEIVEALL==================")
+        # print("\033[0m")
 
 
         
@@ -317,20 +318,17 @@ class SocketRDT:
         ultimoSeqNumACK = -1
         while not es_fin:
 
-            print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
+            #print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
 
             # Recibo paquete
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
        
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
-            print("\033[93m")
-            print(bytes_paquete)
-            print('\033[0m')
-            print("+-----paquete recibido:------+")
-            print(f"|  seqNum: {paquete.getSequenceNumber()}")
-            print(f"|  fin: {paquete.fin}")
-            print(f"|  payload: {paquete.payload}")
-            print(f"+-----------------------------+")
+            # print("+-----paquete recibido:------+")
+            # print(f"|  seqNum: {paquete.getSequenceNumber()}")
+            # print(f"|  fin: {paquete.fin}")
+            # print(f"|  payload: {paquete.payload}")
+            # print(f"+-----------------------------+")
 
             seqNumRecibido = paquete.getSequenceNumber() #5
             
@@ -403,9 +401,9 @@ class SocketRDT:
 
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
 
-        print("\033[93m")
-        print("==================TERMINO RECEIVEALL==================")
-        print("\033[0m")
+        # print("\033[93m")
+        # print("==================TERMINO RECEIVEALL==================")
+        # print("\033[0m")
         return mensajeFinal
 
     def _receive_selective(self,):
