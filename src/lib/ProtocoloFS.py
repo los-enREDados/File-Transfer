@@ -56,8 +56,8 @@ def recibirArchivo(serverSCK: SocketRDT, pathDelArchivoADescargar: str):
     serverSCK.sendall(mensaje)
 
     ack = serverSCK.receive_all()
-    if ack != "ack":
-        print("Error en la conexión")
+    if ack.decode("utf-8") != "ack":
+        print("Error en la conexión AAAA")
 
 
     downloaded_file = serverSCK.receive_all()

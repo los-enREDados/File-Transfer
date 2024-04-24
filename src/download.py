@@ -8,7 +8,6 @@ UDP_PORT = 5005
 MESSAGE = b"Hello, World!"
 
 
-
 def download(path):
     print("UDP target IP: %s" % UDP_IP)
     print("UDP target port: %s" % UDP_PORT)
@@ -19,14 +18,18 @@ def download(path):
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.1")
+    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.2")
 
+
+    print("mi puerto es ", serverSCK.myAddress[1])
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
     serverSCK.connect()
    
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../data/server/"+path)
+    
+    print("\033[92mArchivo Recibido!\033[0m")
 
     with open("../data/cliente/" + path, "wb") as file:
         file.write(archivo)

@@ -17,7 +17,7 @@ NOFIN = 0
 TAMANOLECTURAARCHIVO = None
 
 # TODO: Bajar. Esto es muy grande; es solo para debugear
-TIMEOUTSENDER = 50.0
+TIMEOUTSENDER = 0.5
 TIMEOUTRECIEVER = 500.0
 
 FORMATORED = "!I"
@@ -31,3 +31,12 @@ MENSAJEDOWNLOAD = b"DOW"
 MENSAJEACK = b"ACK"
 MENSAJEACEPTARCONECCION= b"SYNACK"
 
+
+# Packet loss - usar interfaz lo para localhost 
+# sudo tc qdisc add dev <interface_name> root netem delay 0 loss 10%
+
+# Para ver que se haya seteado bien
+# sudo tc qdisc show dev <interface_name>
+
+# Para sacar el packet loss
+# sudo tc qdisc del dev <interface_name> root

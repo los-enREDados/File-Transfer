@@ -24,7 +24,6 @@ def uint32Aint(bytesATransformar:bytes) -> int:
 
 def strABytes(string: str) -> bytes:
     strEnBytes = string.encode('utf-8')
-
     return strEnBytes
 
 def bytesAstr(bytesOrigen: bytes) -> str:
@@ -107,8 +106,9 @@ class SocketRDT:
 
         # Voy a pedir conecciones hasta que alguien me mande el SYN
         while mensajeConeccion != lib.constants.MENSAJECONECCION:
+            print(f"Server esperando conexiones en {self.myAddress}")
             mensajeConeccion, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
-
+            print(f"Recibi {mensajeConeccion} mensaje de {addr}")
         return addr
         
 
@@ -119,24 +119,52 @@ class SocketRDT:
 
         self.skt.sendto(mensaje, self.peerAddr)
 
+
     def connect(self):
-        # ATTENTION: ¿La forma de conectarse es la misma entre stop and
-        # wait y selective repeat?
-        # ATTENTION: el "b" antes del string indica que son bytes
-        mensaje = lib.constants.MENSAJECONECCION
-
-        self.skt.sendto(mensaje, self.peerAddr)
-
-        # ATTENTION: Lo importante, es el addres. Esta tiene el puerto
-        # con el que voy a hablar
+        self.skt.settimeout(lib.constants.TIMEOUTSENDER)
         synAck = b""
-        while synAck != lib.constants.MENSAJEACEPTARCONECCION:
-            # No me interesa lo que me manden HASTA QUE alguien me
-            # mande un SYNACK
-            synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
+        addr = 0
 
-        # Actualizo el peer addres, poniendo ahora el puerto nuevo
+        while synAck != lib.constants.MENSAJEACEPTARCONECCION:
+           
+            try: 
+                print("Enviando SYN a ", self.peerAddr)
+                self.skt.sendto(lib.constants.MENSAJECONECCION, self.peerAddr)
+                synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) 
+                if addr[0] != self.peerAddr[0]:
+                    print("Contesto otro server")
+                    raise ValueError("Se conecto a otro servidor")
+
+            except TimeoutError:
+                # Volver a ejecutar
+                print("TIMEOUT")
+                pass
+          
+        self.skt.settimeout(None)
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
+
+
+        return
+
+
+    # def connect(self):
+    #     # ATTENTION: ¿La forma de conectarse es la misma entre stop and
+    #     # wait y selective repeat?
+    #     # ATTENTION: el "b" antes del string indica que son bytes
+    #     mensaje = lib.constants.MENSAJECONECCION
+
+    #     self.skt.sendto(mensaje, self.peerAddr)
+        
+    #     # ATTENTION: Lo importante, es el addres. Esta tiene el puerto
+    #     # con el que voy a hablar
+    #     synAck = b""
+    #     while synAck != lib.constants.MENSAJEACEPTARCONECCION:
+    #         # No me interesa lo que me manden HASTA QUE alguien me
+    #         # mande un SYNACK
+    #         synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
+
+    #     # Actualizo el peer addres, poniendo ahora el puerto nuevo
+    #     self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
 
     def sendall(self, mensaje:bytes):
         if self.tipo == "SW":
@@ -172,9 +200,11 @@ class SocketRDT:
         return seqNumRecibido == seqNum
 
     def _sendall_stop_and_wait(self, mensaje: bytes):
-        print("\033[92m")
-        print("==================INICIO SENDALL==================")
-        print("\033[0m")
+        self.skt.settimeout(lib.constants.TIMEOUTSENDER)
+
+        # print("\033[92m")
+        # print("==================INICIO SENDALL==================")
+        # print("\033[0m")
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
         # Header:
@@ -182,11 +212,12 @@ class SocketRDT:
         # Fin
         
         #test = False
+        #print(f"mensaje: {mensaje}")
         print(f"cantPaquetesAenviar: {cantPaquetesAenviar}")
 
         seqNum = 0
         while seqNum <= cantPaquetesAenviar:
-            print(f"************PAQUETE SEQNUM: {seqNum}************")
+            #print(f"************PAQUETE SEQNUM: {seqNum}************")
            
             try: 
                 #------------------------------------------------------------------------------------------------------------------------\
@@ -218,16 +249,18 @@ class SocketRDT:
                 # ----------------------------------------------------------------------------------------------------------------------/
                 
                 # Enviamos el paquete
-                print("+-----enviando paquete:------+")
-                print(f"|  seqNum: {seqNum}")
-                print(f"|  fin: {paquete.fin}")
-                print(f"|  payload: {payloadActual}")
-                print(f"+-----------------------------+")
-            
-   
+                # print("+-----enviando paquete:------+")
+                # print(f"|  seqNum: {seqNum}")
+                # print(f"|  fin: {paquete.fin}")
+                # print(f"|  payload: {payloadActual}")
+                # print(f"+-----------------------------+")
+
+                print(f"Enviando paquete a {self.peerAddr}")
+                print(f"seqNum: {seqNum}")
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
                 # Recibimos el ACK de que el paquete llego
+                # Aca puede quedar bloqueado hasta que salte el timeout
                 ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
                 
                 if self._pkt_sent_ok(ack_pkt, seqNum):
@@ -283,9 +316,9 @@ class SocketRDT:
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
 
         # pass
-        print("\033[92m")
-        print("==================TERMINO SENDALL==================")
-        print("\033[0m")
+        # print("\033[92m")
+        # print("==================TERMINO SENDALL==================")
+        # print("\033[0m")
         return
     
 
@@ -305,9 +338,9 @@ class SocketRDT:
         # self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
         
         # self.skt.settimeout(lib.constants.TIMEOUT);
-        print("\033[93m")
-        print("==================INICIO RECEIVEALL==================")
-        print("\033[0m")
+        # print("\033[93m")
+        # print("==================INICIO RECEIVEALL==================")
+        # print("\033[0m")
 
 
         
@@ -317,20 +350,17 @@ class SocketRDT:
         ultimoSeqNumACK = -1
         while not es_fin:
 
-            print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
+            #print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
 
             # Recibo paquete
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
        
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
-            print("\033[93m")
-            print(bytes_paquete)
-            print('\033[0m')
-            print("+-----paquete recibido:------+")
-            print(f"|  seqNum: {paquete.getSequenceNumber()}")
-            print(f"|  fin: {paquete.fin}")
-            print(f"|  payload: {paquete.payload}")
-            print(f"+-----------------------------+")
+            # print("+-----paquete recibido:------+")
+            # print(f"|  seqNum: {paquete.getSequenceNumber()}")
+            # print(f"|  fin: {paquete.fin}")
+            # print(f"|  payload: {paquete.payload}")
+            # print(f"+-----------------------------+")
 
             seqNumRecibido = paquete.getSequenceNumber() #5
             
@@ -403,9 +433,9 @@ class SocketRDT:
 
         # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
 
-        print("\033[93m")
-        print("==================TERMINO RECEIVEALL==================")
-        print("\033[0m")
+        # print("\033[93m")
+        # print("==================TERMINO RECEIVEALL==================")
+        # print("\033[0m")
         return mensajeFinal
 
     def _receive_selective(self,):

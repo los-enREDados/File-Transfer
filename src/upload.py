@@ -19,7 +19,7 @@ def upload(path):
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.1")
+    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.2")
 
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 

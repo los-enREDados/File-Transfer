@@ -9,26 +9,42 @@ print(os.getcwd())
 from lib.SocketRDT import SocketRDT, bytesAstr, uint32Aint
 import lib.ProtocoloFS
 import lib.constants
+import threading
+
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
 SERVER_PATH = "../data/server/"
 
+
+
+seguir_corriendo = True
+lock = threading.Lock()
+
+
+def input_server():
+    global seguir_corriendo
+    res = input("Presione q para cerrar el servidor")
+    if res == "q":
+        with lock:
+            seguir_corriendo = False
+
+        print("Cerrando servidor...")
+
 class Listener:
-    
-    def __init__ (self, ip, port):
-        self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
-                                       (0,0), ip, port)
+        def __init__ (self, ip, port):
+            self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
+                                        (0,0), ip, port)
 
-    def listen(self):
-        # TODO: Poner en un loop y hacer que esto sea multithread
-        # Cada worker deberia estar en su propio thread
-        addr  = self.recieveSocket.acceptConnection()
+        def listen(self):
+            # TODO: Poner en un loop y hacer que esto sea multithread
+            # Cada worker deberia estar en su propio thread
+            addr  = self.recieveSocket.acceptConnection()
 
-        worker(addr, UDP_IP)
-        # w = Worker(addr, UDP_IP)
-        # w.hablar()
+            worker(addr, UDP_IP)
+            # w = Worker(addr, UDP_IP)
+            # w.hablar()
 
 
 def worker(addressCliente, myIP):
@@ -50,8 +66,13 @@ def worker(addressCliente, myIP):
         # TODO: No me capta el tipo correctamente. Arreglar
         # if tipo == lib.constants.MENSAJEUPLOAD:
         #archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
+        
+        print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
         archivo_recibido = socketRDT.receive_all()
     
+        print("\033[92mArchivo Recibido!\033[0m")
+
+
         with open(SERVER_PATH + nombreArchivo, "wb") as file:
             file.write(archivo_recibido)
 
@@ -60,6 +81,8 @@ def worker(addressCliente, myIP):
         socketRDT.sendall("ack".encode())
 
         try: 
+            print(f"\033[93mEnviando '{pathArchivo}' a {addressCliente}...\033[0m")
+            
             with open(pathArchivo, "rb") as file:
                 archivo = file.read()
             
