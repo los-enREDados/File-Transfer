@@ -24,7 +24,6 @@ def uint32Aint(bytesATransformar:bytes) -> int:
 
 def strABytes(string: str) -> bytes:
     strEnBytes = string.encode('utf-8')
-
     return strEnBytes
 
 def bytesAstr(bytesOrigen: bytes) -> str:
@@ -120,24 +119,51 @@ class SocketRDT:
 
         self.skt.sendto(mensaje, self.peerAddr)
 
+
     def connect(self):
-        # ATTENTION: ¿La forma de conectarse es la misma entre stop and
-        # wait y selective repeat?
-        # ATTENTION: el "b" antes del string indica que son bytes
-        mensaje = lib.constants.MENSAJECONECCION
-
-        self.skt.sendto(mensaje, self.peerAddr)
-
-        # ATTENTION: Lo importante, es el addres. Esta tiene el puerto
-        # con el que voy a hablar
+        self.skt.settimeout(lib.constants.TIMEOUTSENDER)
         synAck = b""
-        while synAck != lib.constants.MENSAJEACEPTARCONECCION:
-            # No me interesa lo que me manden HASTA QUE alguien me
-            # mande un SYNACK
-            synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
+        addr = 0
 
-        # Actualizo el peer addres, poniendo ahora el puerto nuevo
+        while synAck != lib.constants.MENSAJEACEPTARCONECCION:
+           
+            try: 
+                self.skt.sendto(lib.constants.MENSAJECONECCION, self.peerAddr)
+                synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) 
+                if addr[0] != self.peerAddr[0]:
+                    print("Contesto otro server")
+                    raise ValueError("Se conecto a otro servidor")
+
+            except TimeoutError:
+                # Volver a ejecutar
+                print("TIMEOUT")
+                pass
+          
+        self.skt.settimeout(None)
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
+
+
+        return
+
+
+    # def connect(self):
+    #     # ATTENTION: ¿La forma de conectarse es la misma entre stop and
+    #     # wait y selective repeat?
+    #     # ATTENTION: el "b" antes del string indica que son bytes
+    #     mensaje = lib.constants.MENSAJECONECCION
+
+    #     self.skt.sendto(mensaje, self.peerAddr)
+        
+    #     # ATTENTION: Lo importante, es el addres. Esta tiene el puerto
+    #     # con el que voy a hablar
+    #     synAck = b""
+    #     while synAck != lib.constants.MENSAJEACEPTARCONECCION:
+    #         # No me interesa lo que me manden HASTA QUE alguien me
+    #         # mande un SYNACK
+    #         synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
+
+    #     # Actualizo el peer addres, poniendo ahora el puerto nuevo
+    #     self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
 
     def sendall(self, mensaje:bytes):
         if self.tipo == "SW":
@@ -229,6 +255,7 @@ class SocketRDT:
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
                 # Recibimos el ACK de que el paquete llego
+                # Aca puede quedar bloqueado hasta que salte el timeout
                 ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
                 
                 if self._pkt_sent_ok(ack_pkt, seqNum):

@@ -17,7 +17,7 @@ NOFIN = 0
 TAMANOLECTURAARCHIVO = None
 
 # TODO: Bajar. Esto es muy grande; es solo para debugear
-TIMEOUTSENDER = 50.0
+TIMEOUTSENDER = 1
 TIMEOUTRECIEVER = 500.0
 
 FORMATORED = "!I"

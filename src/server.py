@@ -95,6 +95,9 @@ def worker(addressCliente, myIP):
         print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
         archivo_recibido = socketRDT.receive_all()
     
+        print("\033[92mArchivo Recibido!\033[0m")
+
+
         with open(SERVER_PATH + nombreArchivo, "wb") as file:
             file.write(archivo_recibido)
 

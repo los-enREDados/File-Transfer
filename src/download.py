@@ -26,6 +26,8 @@ def download(path):
    
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../data/server/"+path)
+    
+    print("\033[92mArchivo Recibido!\033[0m")
 
     with open("../data/cliente/" + path, "wb") as file:
         file.write(archivo)
