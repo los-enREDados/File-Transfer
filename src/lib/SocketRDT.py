@@ -128,6 +128,7 @@ class SocketRDT:
         while synAck != lib.constants.MENSAJEACEPTARCONECCION:
            
             try: 
+                print("Enviando SYN a ", self.peerAddr)
                 self.skt.sendto(lib.constants.MENSAJECONECCION, self.peerAddr)
                 synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) 
                 if addr[0] != self.peerAddr[0]:
@@ -199,6 +200,8 @@ class SocketRDT:
         return seqNumRecibido == seqNum
 
     def _sendall_stop_and_wait(self, mensaje: bytes):
+        self.skt.settimeout(lib.constants.TIMEOUTSENDER)
+
         # print("\033[92m")
         # print("==================INICIO SENDALL==================")
         # print("\033[0m")
@@ -209,6 +212,7 @@ class SocketRDT:
         # Fin
         
         #test = False
+        #print(f"mensaje: {mensaje}")
         print(f"cantPaquetesAenviar: {cantPaquetesAenviar}")
 
         seqNum = 0
@@ -250,8 +254,9 @@ class SocketRDT:
                 # print(f"|  fin: {paquete.fin}")
                 # print(f"|  payload: {payloadActual}")
                 # print(f"+-----------------------------+")
-            
-   
+
+                print(f"Enviando paquete a {self.peerAddr}")
+                print(f"seqNum: {seqNum}")
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
                 # Recibimos el ACK de que el paquete llego

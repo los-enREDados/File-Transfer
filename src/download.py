@@ -20,6 +20,8 @@ def download(path):
     # hace falta almacenar "myAddress". Para pensar
     serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.2")
 
+
+    print("mi puerto es ", serverSCK.myAddress[1])
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
     serverSCK.connect()
