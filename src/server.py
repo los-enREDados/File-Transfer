@@ -33,43 +33,18 @@ def input_server():
         print("Cerrando servidor...")
 
 class Listener:
-    
-    def __init__ (self, ip, port):
-        self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
-                                       (0,0), ip, port)
+        def __init__ (self, ip, port):
+            self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
+                                        (0,0), ip, port)
 
-    def listen(self):
-        # TODO: Poner en un loop y hacer que esto sea multithread
-        # Cada worker deberia estar en su propio thread
-        ts = []
-
-        global seguir_corriendo
-
-        thread_lector_input = threading.Thread(target=input_server, args=())
-        thread_lector_input.start()
-     
-
-        while True:
-                
-            with lock:
-                if not seguir_corriendo:
-                    break
-            
-
+        def listen(self):
+            # TODO: Poner en un loop y hacer que esto sea multithread
+            # Cada worker deberia estar en su propio thread
             addr  = self.recieveSocket.acceptConnection()
 
-            x = threading.Thread(target=worker, args=(addr, UDP_IP))
-            
-            ts.append(x)
-            x.start()
-            
-            #worker(addr, UDP_IP)
-        print("Saliendo del loop")
-        for x in ts:
-            x.join()
-
-        # w = Worker(addr, UDP_IP)
-        # w.hablar()
+            worker(addr, UDP_IP)
+            # w = Worker(addr, UDP_IP)
+            # w.hablar()
 
 
 def worker(addressCliente, myIP):
