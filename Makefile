@@ -1,3 +1,7 @@
+LOOPBACK := $(shell ls -l /sys/class/net/ | grep virtual | awk '{ print $$NF }' | awk -F '/' '{ print $$NF }')
+PERDIDA  := 50
+ARCHIVO  := data/azul.jpeg
+
 stopAndWait:
 	sed -i 's/TIPODEPROTOCOLO = ".."/TIPODEPROTOCOLO = "SW"/' lib/constants.py
 
@@ -12,8 +16,17 @@ flake8:
 matarColgados:
 	killall -9 python3
 
-cliente:
-	python3 src/cliente.py
+upload:
+	python3 src/upload.py $(ARCHIVO)
 
 server:
 	python3 src/server.py
+
+crearPerdida:
+	tc qdisc add dev $(LOOPBACK) root netem delay 0 loss $(PERDIDA)
+
+sacarPerdida:
+	tc qdisc del dev $(LOOPBACK) root
+
+
+.PHONY: server upload download
