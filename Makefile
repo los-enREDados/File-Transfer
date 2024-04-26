@@ -3,10 +3,10 @@ PERDIDA  := 50
 ARCHIVO  := data/azul.jpeg
 
 stopAndWait:
-	sed -i 's/TIPODEPROTOCOLO = ".."/TIPODEPROTOCOLO = "SW"/' lib/constants.py
+	sed -i 's/TIPODEPROTOCOLO = ".."/TIPODEPROTOCOLO = "SW"/' src/lib/constants.py
 
 selectiveRepeat:
-	sed -i 's/TIPODEPROTOCOLO = ".."/TIPODEPROTOCOLO = "SR"/' lib/constants.py
+	sed -i 's/TIPODEPROTOCOLO = ".."/TIPODEPROTOCOLO = "SR"/' src/lib/constants.py
 
 flake8:
 	@echo -----------------------------------------------------
