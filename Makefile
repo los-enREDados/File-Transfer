@@ -22,7 +22,8 @@ upload:
 server:
 	python3 src/server.py
 
-crearPerdida:
+
+crearPerdida: sacarPerdida
 	tc qdisc add dev $(LOOPBACK) root netem delay 0 loss $(PERDIDA)
 
 sacarPerdida:
