@@ -459,25 +459,30 @@ class SocketRDT:
             
         return seq_number_perdido, lista_de_timeouts_actualizada
 
-    def _obtener_primer_paquete_no_ack(self, listaDeAcks, ultimoACK:int, window):
-
-        indice = -1 #-1 significa que termine de enviar!
-        for i in range(ultimoACK, len(listaDeAcks)):
+    def _obtener_primer_paquete_no_ack(self, listaDeAcks, window):
+        seqNum = -1 #-1 significa que termine de enviar :D !
+        for i in range(window[0], window[1]+1):
             if i > window[1]:
-                sys.exit("EL PRIMERO LIBRE ESTA POR FUERA DE LA WINDOW")
+                print(f'SUCEDIO ALGO. i = " + str(i) + " window[1] = " + str(window[1])', i, window[1])
+                pass
+                #sys.exit("EL PRIMERO LIBRE ESTA POR FUERA DE LA WINDOW")
+# [True, False, True, False, False, False, False, False, False, False]
             boolActual = listaDeAcks[i]
             if boolActual == False:
-                indice = i
+                seqNum = i
                 break
 
-        return indice
+        return seqNum
 
-    def _enviar_paquete_SR(self, mensaje: bytes, seqNum: int, list_de_timeouts):
+    def _enviar_paquete_SR(self, mensaje: bytes, seqNum: int, list_de_timeouts, cantPaquetesAenviar:int):
         indiceInicial = seqNum * lib.constants.TAMANOPAQUETE
         indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
         payloadActual = mensaje[indiceInicial:indiceFinal]
 
-        paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
+        if seqNum == cantPaquetesAenviar:                                                                                       #|
+            paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
+        else:                                                                                                                   #|
+            paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
 
         self.skt.sendto(paquete.misBytes, self.peerAddr)
 
@@ -500,8 +505,24 @@ class SocketRDT:
         return lista_de_timeoutes_actualizada
 
 
+    def _is_ventana_full(self, ventana):
+        return
+# [0, 1, 2, 3, 4]
+# [0,2]
 
-        
+# PaqueteActual = ventana[0]
+# if PaqueteActual <= ventana[fin]:
+    #mandar paquete
+    #PaqueteActual += 1
+
+
+# [0, 1, 2, 3, 4]
+        pass  
+
+# Paquete
+# - payload
+# - Timetout
+# - ACK     
 
     def _sendall_selective(self, mensaje: bytes):
 
@@ -519,12 +540,14 @@ class SocketRDT:
         # inicio inclusive y el fin inclusive
         ventana = [0, tamanoVentana]
 
-        listaDeTimeouts = [(0, None)] * tamanoVentana
+        listaDeTimeouts = [(0, None)] * tamanoVentana 
+        # listadeTimeous = [(seqNum, tiempoDeEnvio), ...]
         listaDeACKS     = [False] * cantPaquetesAenviar
 
 
         sequenceMasChicoSinACK = 0
         seqNumAEnviar = 0
+        seqNumActual = 0 
 
         self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
 
@@ -536,26 +559,35 @@ class SocketRDT:
 
                 if seqNumPerdido != -1:
                     seqNumAEnviar = seqNumPerdido
+                    
                 else:
-                    seqNumAEnviar = sequenceMasChicoSinACK
-                    sequenceMasChicoSinACK = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventana)
+                    seqNumAEnviar = seqNumActual
+                #    seqNumActual = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventana)
+                    if seqNumAEnviar < ventana[1] :
+                        seqNumActual += 1
+    
+    
+                # if hay_algo_enviar: 
+                listaDeTimeouts = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts, cantPaquetesAenviar)
 
-
-                listaDeTimeouts = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts)
+                if seqNumActual < ventana[1]:
+                    # no hay mas que enviar en la ventana actual
+                    continue
 
                 ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
+
+                
                 seqNumRecibidio = uint32Aint(ack_pkt)
                 listaDeACKS[seqNumRecibidio] = True #Si ya era true,lo piso. Total, esta todo joya.
                 if seqNumRecibidio == ventana[0]:
-                    ventanaTotal = [0, cantPaquetesAenviar]
-                    nuevoComienzoVentana = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventanaTotal)
+                    nuevoComienzoVentana = self._obtener_primer_paquete_no_ack(listaDeACKS, ventana)
                     ventana = [nuevoComienzoVentana, nuevoComienzoVentana + tamanoVentana]
-
+            
             except TimeoutError:
                 print("TIMEOUT")
                 pass
 
-
+        self.skt.settimeout(None)  
 
         sys.exit("NO IMPLEMENTADO")
         pass
