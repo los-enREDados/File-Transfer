@@ -510,8 +510,10 @@ class SocketRDT:
 
         # WARNING: Puse 5 para testear tal cual lo que dice el libre.
         # el numrero. Esto se tiene que calcular basado en la cantidad
-        # de paquetes a enviar. ¿Como se haria? 
-        tamanoVentana = 5
+        # de paquetes a enviar. ¿Como se haria?
+
+        # Chequear si realmente es // 2
+        tamanoVentana = cantPaquetesAenviar // 2
 
         # ATTENTION: La ventana es una lista de dos valores. Siendo el
         # inicio inclusive y el fin inclusive
@@ -565,7 +567,16 @@ class SocketRDT:
         # "sequence number" : "payload"
         mensajeFinal = {}
         es_fin = False
-        while not es_fin:
+        cant_recibidos = 0
+        seq_num_de_fin = None
+
+        # [0, 1, 2, 3, 4]
+        # [0, 1, 2, 3, 4]
+        # cant_recibios = 5
+        while True:
+            if seq_num_de_fin and cant_recibidos == seq_num_de_fin+1:
+                break
+       
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
 
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
@@ -576,8 +587,19 @@ class SocketRDT:
 
             payload = paquete.getPayload()
 
-            mensajeFinal[seqNumRecibido] = payload
             
+            mensajeFinal[seqNumRecibido] = payload
+
+            if paquete.fin:
+                seq_num_de_fin = paquete.seqNum
+
+            cant_recibidos += 1
+
+        mensaje = bytearray()
+        for i in range(cant_recibidos):
+            mensaje.extend( mensajeFinal[i])
+        
+        return mensaje 
         sys.exit("NO IMPLEMENTADO")
 
 
