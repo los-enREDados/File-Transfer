@@ -1,7 +1,7 @@
 import socket
 import sys
 import math
-import time
+import datetime
 import struct
 from enum import Enum
 
@@ -170,7 +170,7 @@ class SocketRDT:
         if self.tipo == "SW":
             self._sendall_stop_and_wait(mensaje)
         else:
-            self._sendall_selective()
+            self._sendall_selective(mensaje)
         return
 
     def receive_all(self, ):
@@ -322,11 +322,6 @@ class SocketRDT:
         return
     
 
-
-    def _sendall_selective(self,):
-        sys.exit("NO IMPLEMENTADO")
-        pass
-
     def _receive_stop_and_wait(self,):
         # Esto me va a devolver un addr y data.
         # addr yo "en teoria" ya lo conozco
@@ -438,7 +433,151 @@ class SocketRDT:
         # print("\033[0m")
         return mensajeFinal
 
+    def _chequear_timeouts(self, lista_de_timeouts, tiempo_ahora):
+        lista_de_timeouts_actualizada = lista_de_timeouts
+        indice_seq_number_perdido = -1
+
+        for i in range(len(lista_de_timeouts_actualizada)):
+            seq_number, tiempo_de_envio = lista_de_timeouts_actualizada[i]
+            # Si todavia no tiene envio, no hago nada
+            if tiempo_de_envio == None:
+                continue
+
+            segundos_sin_ack = (tiempo_de_envio - tiempo_ahora).total_seconds()
+
+            # Apenas encuentro uno, lo quiero reenviar
+            if segundos_sin_ack > lib.constants.TIEMOUTPORPAQUETESR:
+                indice_seq_number_perdido = i
+                break
+
+        seq_number_perdido = -1 # -1 significa que no hubo timeout
+                
+        # No lo saco por miedo a sacar algo en el medio de un for
+        if indice_seq_number_perdido != -1:
+            seq_number_perdido = lista_de_timeouts_actualizada[indice_seq_number_perdido][0]
+            lista_de_timeouts_actualizada[indice_seq_number_perdido] = (None, None)
+            
+        return seq_number_perdido, lista_de_timeouts_actualizada
+
+    def _obtener_primer_paquete_no_ack(self, listaDeAcks, ultimoACK:int, window):
+
+        indice = -1 #-1 significa que termine de enviar!
+        for i in range(ultimoACK, len(listaDeAcks)):
+            if i > window[1]:
+                sys.exit("EL PRIMERO LIBRE ESTA POR FUERA DE LA WINDOW")
+            boolActual = listaDeAcks[i]
+            if boolActual == False:
+                indice = i
+                break
+
+        return indice
+
+    def _enviar_paquete_SR(self, mensaje: bytes, seqNum: int, list_de_timeouts):
+        indiceInicial = seqNum * lib.constants.TAMANOPAQUETE
+        indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
+        payloadActual = mensaje[indiceInicial:indiceFinal]
+
+        paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
+
+        self.skt.sendto(paquete.misBytes, self.peerAddr)
+
+        lista_de_timeoutes_actualizada = list_de_timeouts
+
+        # Busco el primer slot libre
+        indiceEspacioVacio = -1
+        for i in range(len(lista_de_timeoutes_actualizada)):
+            espacioActual = lista_de_timeoutes_actualizada[i]
+            if espacioActual[1] == None:
+                indiceEspacioVacio = i
+                break
+
+        if indiceEspacioVacio == -1:
+            sys.exit("NO HABIA ESPACIO EN LA VENTANA")
+
+        tiempoActual =  datetime.datetime.now()
+        lista_de_timeoutes_actualizada[i] = (seqNum, tiempoActual)
+
+        return lista_de_timeoutes_actualizada
+
+
+
+        
+
+    def _sendall_selective(self, mensaje: bytes):
+
+        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
+        cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
+
+        # WARNING: Puse 5 para testear tal cual lo que dice el libre.
+        # el numrero. Esto se tiene que calcular basado en la cantidad
+        # de paquetes a enviar. ¿Como se haria? 
+        tamanoVentana = 5
+
+        # ATTENTION: La ventana es una lista de dos valores. Siendo el
+        # inicio inclusive y el fin inclusive
+        ventana = [0, tamanoVentana]
+
+        listaDeTimeouts = [(0, None)] * tamanoVentana
+        listaDeACKS     = [False] * cantPaquetesAenviar
+
+
+        sequenceMasChicoSinACK = 0
+        seqNumAEnviar = 0
+
+        self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
+
+        while sequenceMasChicoSinACK != -1:
+            try:
+                tiempoActual =  datetime.datetime.now()
+
+                seqNumPerdido, listaDeTimeouts = self._chequear_timeouts(listaDeTimeouts, tiempoActual)
+
+                if seqNumPerdido != -1:
+                    seqNumAEnviar = seqNumPerdido
+                else:
+                    seqNumAEnviar = sequenceMasChicoSinACK
+                    sequenceMasChicoSinACK = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventana)
+
+
+                listaDeTimeouts = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts)
+
+                ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
+                seqNumRecibidio = uint32Aint(ack_pkt)
+                listaDeACKS[seqNumRecibidio] = True #Si ya era true,lo piso. Total, esta todo joya.
+                if seqNumRecibidio == ventana[0]:
+                    ventanaTotal = [0, cantPaquetesAenviar]
+                    nuevoComienzoVentana = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventanaTotal)
+                    ventana = [nuevoComienzoVentana, nuevoComienzoVentana + tamanoVentana]
+
+            except TimeoutError:
+                print("TIMEOUT")
+                pass
+
+
+
+        sys.exit("NO IMPLEMENTADO")
+        pass
+
+
     def _receive_selective(self,):
+        # NOTE: Uso un diccionario como mejor acercamiento a un buffer
+        # Las entradas del diccionario son:
+        # "sequence number" : "payload"
+        mensajeFinal = {}
+        es_fin = False
+        while not es_fin:
+            bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
+
+            paquete = Paquete.Paquete_from_bytes(bytes_paquete)
+
+            seqNumRecibido = paquete.getSequenceNumber() #5
+
+            self.skt.sendto(intAUint32(seqNumRecibido), self.peerAddr)
+
+            payload = paquete.getPayload()
+
+            mensajeFinal[seqNumRecibido] = payload
+            
         sys.exit("NO IMPLEMENTADO")
 
 

@@ -1,7 +1,7 @@
 IPTUPLA = 0
 PUERTOTUPLA = 1
 
-TIPODEPROTOCOLO = "SW" 
+TIPODEPROTOCOLO = "SR" 
 
 # Estos dos estan en bytes
 TAMANONUMERORED = 4
@@ -16,9 +16,11 @@ NOFIN = 0
 
 TAMANOLECTURAARCHIVO = None
 
-# TODO: Bajar. Esto es muy grande; es solo para debugear
 TIMEOUTSENDER = 0.5
-TIMEOUTRECIEVER = 500.0
+
+# TODO: Bajar. Esto es muy grande; es solo para debugear
+TIMEOUTSENDERSR = 100
+TIEMOUTPORPAQUETESR = 10
 
 FORMATORED = "!I"
 FORMATONATIVO = "=I"
