@@ -466,7 +466,7 @@ class SocketRDT:
 
     def _obtener_primer_paquete_no_ack(self, listaDeTimeouts, window):
         seqNum = -1
-        
+
         for i in range(len(listaDeTimeouts)):
 #         seqNum = -1 #-1 significa que termine de enviar :D !
 #         for i in range(window[0], window[1]+1):
@@ -576,7 +576,6 @@ class SocketRDT:
 
         #listaDeACKS     = [False] * cantPaquetesAenviar
         #listaDeACKS     = [False] * tamanoVentana
-
 
         sequenceMasChicoSinACK = 0
         seqNumAEnviar = 0
