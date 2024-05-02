@@ -14,6 +14,7 @@ def upload(path):
     print("UDP target port: %s" % UDP_PORT)
 
 
+
     peerAddres = (UDP_IP, UDP_PORT)
 
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
