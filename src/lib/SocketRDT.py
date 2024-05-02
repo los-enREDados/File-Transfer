@@ -460,7 +460,7 @@ class SocketRDT:
 
             # NOTE: Lo saco de la lista de timeouts porque "ya no aplica ese timeout".
             # Cuando envie de nuevo el paquete perdido, voy a volver a actualizar la lista
-            lista_de_timeouts_actualizada[indice_seq_number_perdido] = (None, None, False)
+            lista_de_timeouts_actualizada[indice_seq_number_perdido] = [None, None, False]
             
         return seq_number_perdido, lista_de_timeouts_actualizada
 
@@ -475,7 +475,7 @@ class SocketRDT:
 #                 pass
 #                 #sys.exit("EL PRIMERO LIBRE ESTA POR FUERA DE LA WINDOW")
 # # [True, False, True, False, False, False, False, False, False, False]
-            boolActual = listaDeTimeouts[i][3]
+            boolActual = listaDeTimeouts[i][2]
             if boolActual == False:
                 seqNum = i
                 print(f"Recibi el ack de secuencia: {seqNum}")
@@ -505,7 +505,7 @@ class SocketRDT:
         indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
         payloadActual = mensaje[indiceInicial:indiceFinal]
 
-        if seqNum == cantPaquetesAenviar:                                                                                       #|
+        if seqNum == cantPaquetesAenviar - 1:                                                                                       #|
             paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
         else:                                                                                                                   #|
             paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
@@ -517,7 +517,7 @@ class SocketRDT:
 
 
         tiempoActual =  datetime.datetime.now()
-        lista_de_timeoutes_actualizada[indiceEspacioVacio] = (seqNum, tiempoActual)
+        lista_de_timeoutes_actualizada[indiceEspacioVacio] = [seqNum, tiempoActual, False]
 
         pudeEnviar = True
         return lista_de_timeoutes_actualizada, pudeEnviar
@@ -533,7 +533,7 @@ class SocketRDT:
             celda = lista_de_timeoutes_actualizada[i]
             seqNum = celda[0]
             if seqNum == seqNumRecibido:
-                lista_de_timeoutes_actualizada[i][3] = True
+                lista_de_timeoutes_actualizada[i][2] = True
 
         return lista_de_timeoutes_actualizada
 
@@ -561,17 +561,17 @@ class SocketRDT:
 
 
         # ATTENTION: Chequear si realmente es // 2
-        tamanoVentana = cantPaquetesAenviar // 2
+        tamanoVentana = math.ceil(cantPaquetesAenviar / 2)
 
         # ATTENTION: La ventana es una lista de dos valores. Siendo el
         # inicio inclusive y el fin inclusive
-        ventana = [0, tamanoVentana]
+        ventana = [0, tamanoVentana - 1]
 
         # NOTE: Lista de timeouts es una lista de tuplas que representa
         # (Sequence number, tiempo de envio [clase datetime de Python])
         # La inicializo "con valores default"
         # listadeTimeous = [(seqNum, tiempoDeEnvio), ...]
-        listaDeTimeouts = [(None, None, False)] * tamanoVentana 
+        listaDeTimeouts = [[None, None, False]] * tamanoVentana 
         
 
         #listaDeACKS     = [False] * cantPaquetesAenviar
@@ -616,13 +616,14 @@ class SocketRDT:
                 ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
 
                 
-                seqNumRecibidio = uint32Aint(ack_pkt)
-
+                seqNumRecibido = uint32Aint(ack_pkt)
                 
                 listaDeTimeouts = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido)
 
-                if seqNumRecibidio == ventana[0]:
+                if seqNumRecibido == ventana[0]:
                     nuevoComienzoVentana = self._obtener_primer_paquete_no_ack(listaDeTimeouts, ventana)
+                    if nuevoComienzoVentana == -1:
+                        break
                     ventana = [nuevoComienzoVentana, nuevoComienzoVentana + tamanoVentana]
             
             except TimeoutError:
@@ -648,7 +649,7 @@ class SocketRDT:
         # [0, 1, 2, 3, 4]
         # cant_recibios = 5
         while True:
-            if seq_num_de_fin and cant_recibidos == seq_num_de_fin+1:
+            if seq_num_de_fin != None and cant_recibidos == seq_num_de_fin+1:
                 break
        
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
@@ -664,8 +665,10 @@ class SocketRDT:
             
             mensajeFinal[seqNumRecibido] = payload
 
-            if paquete.fin:
-                seq_num_de_fin = paquete.seqNum
+
+            es_fin = paquete.fin
+            if es_fin == True:
+                seq_num_de_fin = seqNumRecibido
 
             cant_recibidos += 1
 
