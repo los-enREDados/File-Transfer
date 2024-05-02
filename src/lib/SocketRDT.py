@@ -433,11 +433,11 @@ class SocketRDT:
         # print("\033[0m")
         return mensajeFinal
 
-    def _chequear_timeouts(self, lista_de_timeouts, tiempo_ahora):
+    def _chequear_timeouts(self, lista_de_timeouts, tiempo_ahora, ventana):
         lista_de_timeouts_actualizada = lista_de_timeouts
-        indice_seq_number_perdido = -1
 
-        for i in range(len(lista_de_timeouts_actualizada)):
+        seq_number_perdido = -1
+        for i in range(ventana[0], ventana[1] + 1):
             celda = lista_de_timeouts_actualizada[i]
             seq_number = celda[0]
             tiempo_de_envio = celda[1]
@@ -449,54 +449,46 @@ class SocketRDT:
 
             # Apenas encuentro uno, lo quiero reenviar
             if segundos_sin_ack > lib.constants.TIEMOUTPORPAQUETESR:
-                indice_seq_number_perdido = i
+                seq_number_perdido = i
                 break
 
-        seq_number_perdido = -1 # -1 significa que no hubo timeout
-                
         # No lo saco por miedo a sacar algo en el medio de un for
-        if indice_seq_number_perdido != -1:
-            seq_number_perdido = lista_de_timeouts_actualizada[indice_seq_number_perdido][0]
-
+        if seq_number_perdido != -1:
             # NOTE: Lo saco de la lista de timeouts porque "ya no aplica ese timeout".
             # Cuando envie de nuevo el paquete perdido, voy a volver a actualizar la lista
-            lista_de_timeouts_actualizada[indice_seq_number_perdido] = [None, None, False]
+            lista_de_timeouts_actualizada[seq_number_perdido][1] = None
             
         return seq_number_perdido, lista_de_timeouts_actualizada
 
-    def _obtener_primer_paquete_no_ack(self, listaDeTimeouts, window):
-        seqNum = -1
-
-        for i in range(len(listaDeTimeouts)):
-#         seqNum = -1 #-1 significa que termine de enviar :D !
-#         for i in range(window[0], window[1]+1):
-#             if i > window[1]:
-#                 print(f'SUCEDIO ALGO. i = " + str(i) + " window[1] = " + str(window[1])', i, window[1])
-#                 pass
-#                 #sys.exit("EL PRIMERO LIBRE ESTA POR FUERA DE LA WINDOW")
-# # [True, False, True, False, False, False, False, False, False, False]
+    def _obtener_nuevo_comienzo_ventana(self, listaDeTimeouts, window):
+        for i in range(window[0], window[1]+1):
             boolActual = listaDeTimeouts[i][2]
             if boolActual == False:
-                seqNum = i
-                print(f"Recibi el ack de secuencia: {seqNum}")
-                break
+                print(f"Recibi el ack de secuencia: {i}")
+                return i
 
-        return seqNum
+        return window[1] + 1
 
-    def _enviar_paquete_SR(self, mensaje: bytes, seqNum: int, list_de_timeouts, cantPaquetesAenviar:int):
+    def _enviar_paquete_SR(self, mensaje: bytes, seqNum: int, list_de_timeouts, cantPaquetesAenviar:int, ventana):
+
+        celdaAEnviar = list_de_timeouts[seqNum]
+
+        # Esto significa que el sequence number que corresponde al paquete
+        # ya fue enviado. Y esto epserando su ACK.
+        if celdaAEnviar[1] != None:
+            print("ESTE PAQUETE FUE ENVIADO")
+            return list_de_timeouts, False
+
+        elif celdaAEnviar[2] == True:
+            print("ESTE PAQUETE YA FUE ACKEADO")
+            return list_de_timeouts, False
+
+        # NOTE: Theo ama esto <3
+        if celdaAEnviar[0] < ventana[0] or celdaAEnviar[0] > ventana[0]:
+            sys.exit("FUERA DE LA VENTANA >:D")
+
+
         # Busco el primer slot libre, voy a actualizar la lista de timeouts
-        indiceEspacioVacio = -1
-        for i in range(len(list_de_timeouts)):
-            espacioActual = list_de_timeouts[i]
-            if espacioActual[1] == None:
-                indiceEspacioVacio = i
-                break
-
-
-        if indiceEspacioVacio == -1:
-            pudeEnviar = False
-            return list_de_timeouts, pudeEnviar 
-            sys.exit("NO HABIA ESPACIO EN LA VENTANA")
 
 
         # NOTE: Si llegue hasta significa que hay espacio en la ventana
@@ -517,7 +509,7 @@ class SocketRDT:
 
 
         tiempoActual =  datetime.datetime.now()
-        lista_de_timeoutes_actualizada[indiceEspacioVacio] = [seqNum, tiempoActual, False]
+        lista_de_timeoutes_actualizada[seqNum] = [seqNum, tiempoActual, False]
 
         pudeEnviar = True
         return lista_de_timeoutes_actualizada, pudeEnviar
@@ -529,12 +521,9 @@ class SocketRDT:
     def _actualiza_acks_sr(self, listaDeTimeouts, seqNumRecibido):
         lista_de_timeoutes_actualizada = listaDeTimeouts
 
-        for i in range(len(lista_de_timeoutes_actualizada)):
-            celda = lista_de_timeoutes_actualizada[i]
-            seqNum = celda[0]
-            if seqNum == seqNumRecibido:
-                lista_de_timeoutes_actualizada[i][2] = True
-
+        lista_de_timeoutes_actualizada[seqNumRecibido][1] = None
+        lista_de_timeoutes_actualizada[seqNumRecibido][2] = True 
+        
         return lista_de_timeoutes_actualizada
 
 # [0, 1, 2, 3, 4]
@@ -570,8 +559,8 @@ class SocketRDT:
         # NOTE: Lista de timeouts es una lista de tuplas que representa
         # (Sequence number, tiempo de envio [clase datetime de Python])
         # La inicializo "con valores default"
-        # listadeTimeous = [(seqNum, tiempoDeEnvio), ...]
-        listaDeTimeouts = [[None, None, False]] * tamanoVentana 
+        # listadeTimeous = [(tiempoDeEnvio, ackeado), ...]
+        listaDeTimeouts = [[None, False]] * cantPaquetesAenviar
         
 
         #listaDeACKS     = [False] * cantPaquetesAenviar
@@ -590,12 +579,13 @@ class SocketRDT:
 # 1: [(0, T0), (None, None), (None, None), (None, None), (None, None)]
 # 2: [(0, T0), (1, T1), (None, None), (None, None), (None, None)]
 # 3: [(0, T0), (1, T1), (2, T2), (None, None), (None, None)]
+# 4: [(None, None), (1, T1), (2, T2), (3, T3), (None, None)]
 
 
             try:
                 tiempoActual =  datetime.datetime.now()
 
-                seqNumPerdido, listaDeTimeouts = self._chequear_timeouts(listaDeTimeouts, tiempoActual)
+                seqNumPerdido, listaDeTimeouts = self._chequear_timeouts(listaDeTimeouts, tiempoActual, ventana)
 
                 if seqNumPerdido != -1:
                     seqNumAEnviar = seqNumPerdido
@@ -603,11 +593,11 @@ class SocketRDT:
                 else:
                     seqNumAEnviar = seqNumActual
                 #    seqNumActual = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventana)
-                    if seqNumAEnviar < ventana[1] :
+                    if seqNumAEnviar < ventana[1]:
                         seqNumActual += 1
     
     
-                listaDeTimeouts, pudeEnviar = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts, cantPaquetesAenviar)
+                listaDeTimeouts, pudeEnviar = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts, cantPaquetesAenviar, ventana)
                 
                 # NOTE: No va a poder enviar cuando la ventana este llena
                 if pudeEnviar == True:
@@ -621,9 +611,8 @@ class SocketRDT:
                 listaDeTimeouts = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido)
 
                 if seqNumRecibido == ventana[0]:
-                    nuevoComienzoVentana = self._obtener_primer_paquete_no_ack(listaDeTimeouts, ventana)
-                    if nuevoComienzoVentana == -1:
-                        break
+                    nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
+
                     ventana = [nuevoComienzoVentana, nuevoComienzoVentana + tamanoVentana]
             
             except TimeoutError:
