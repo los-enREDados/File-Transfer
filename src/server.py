@@ -15,7 +15,7 @@ import threading
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
-SERVER_PATH = "../data/server/"
+SERVER_PATH = "data/server/"
 
 
 
