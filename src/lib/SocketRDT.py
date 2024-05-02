@@ -32,6 +32,13 @@ def bytesAstr(bytesOrigen: bytes) -> str:
     return stringObtenido
 
 
+class CeldaSR:
+    def __init__(self, tiempoDeEnvio=None, ackeado=False):
+        self.tiempoDeEnvio = tiempoDeEnvio
+        self.ackeado = ackeado
+# Copilot please reboot my computer
+# Go go gadget
+
 # Esto mas que una clase es un struct. Lo hago aparte para que quede
 # mas legible
 class Paquete:
@@ -438,9 +445,10 @@ class SocketRDT:
 
         seq_number_perdido = -1
         for i in range(ventana[0], ventana[1] + 1):
+            print(f"\033]93mChequeando timeout de secuencia: {i}\033]0m")
             celda = lista_de_timeouts_actualizada[i]
-            seq_number = celda[0]
-            tiempo_de_envio = celda[1]
+            seq_number = i
+            tiempo_de_envio = celda.tiempoDeEnvio
             # Si todavia no tiene envio, no hago nada
             if tiempo_de_envio == None:
                 continue
@@ -456,13 +464,13 @@ class SocketRDT:
         if seq_number_perdido != -1:
             # NOTE: Lo saco de la lista de timeouts porque "ya no aplica ese timeout".
             # Cuando envie de nuevo el paquete perdido, voy a volver a actualizar la lista
-            lista_de_timeouts_actualizada[seq_number_perdido][1] = None
+            lista_de_timeouts_actualizada[seq_number_perdido].tiempoDeEnvio = None
             
         return seq_number_perdido, lista_de_timeouts_actualizada
 
     def _obtener_nuevo_comienzo_ventana(self, listaDeTimeouts, window):
         for i in range(window[0], window[1]+1):
-            boolActual = listaDeTimeouts[i][2]
+            boolActual = listaDeTimeouts[i].ackeado
             if boolActual == False:
                 print(f"Recibi el ack de secuencia: {i}")
                 return i
@@ -475,16 +483,16 @@ class SocketRDT:
 
         # Esto significa que el sequence number que corresponde al paquete
         # ya fue enviado. Y esto epserando su ACK.
-        if celdaAEnviar[1] != None:
+        if celdaAEnviar.tiempoDeEnvio != None:
             print("ESTE PAQUETE FUE ENVIADO")
             return list_de_timeouts, False
 
-        elif celdaAEnviar[2] == True:
+        elif celdaAEnviar.ackeado == True:
             print("ESTE PAQUETE YA FUE ACKEADO")
             return list_de_timeouts, False
 
         # NOTE: Theo ama esto <3
-        if celdaAEnviar[0] < ventana[0] or celdaAEnviar[0] > ventana[0]:
+        if seqNum < ventana[0] or seqNum > ventana[0]:
             sys.exit("FUERA DE LA VENTANA >:D")
 
 
@@ -509,7 +517,7 @@ class SocketRDT:
 
 
         tiempoActual =  datetime.datetime.now()
-        lista_de_timeoutes_actualizada[seqNum] = [seqNum, tiempoActual, False]
+        lista_de_timeoutes_actualizada[seqNum] = CeldaSR(tiempoActual, False)
 
         pudeEnviar = True
         return lista_de_timeoutes_actualizada, pudeEnviar
@@ -521,8 +529,8 @@ class SocketRDT:
     def _actualiza_acks_sr(self, listaDeTimeouts, seqNumRecibido):
         lista_de_timeoutes_actualizada = listaDeTimeouts
 
-        lista_de_timeoutes_actualizada[seqNumRecibido][1] = None
-        lista_de_timeoutes_actualizada[seqNumRecibido][2] = True 
+        lista_de_timeoutes_actualizada[seqNumRecibido].timpoDeEnvio = None
+        lista_de_timeoutes_actualizada[seqNumRecibido].ackeado = True 
         
         return lista_de_timeoutes_actualizada
 
@@ -560,7 +568,9 @@ class SocketRDT:
         # (Sequence number, tiempo de envio [clase datetime de Python])
         # La inicializo "con valores default"
         # listadeTimeous = [(tiempoDeEnvio, ackeado), ...]
-        listaDeTimeouts = [[None, False]] * cantPaquetesAenviar
+        listaDeTimeouts = [CeldaSR()] * cantPaquetesAenviar
+
+        # listaDeTimeouts = [[None, False]] * cantPaquetesAenviar
         
 
         #listaDeACKS     = [False] * cantPaquetesAenviar
@@ -573,13 +583,6 @@ class SocketRDT:
         self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
 
         while sequenceMasChicoSinACK != -1:
-# [0, 1, 2, 3, 4]
-# [0, 2]
-# [(None, None), (None, None), (None, None), (None, None), (None, None)]
-# 1: [(0, T0), (None, None), (None, None), (None, None), (None, None)]
-# 2: [(0, T0), (1, T1), (None, None), (None, None), (None, None)]
-# 3: [(0, T0), (1, T1), (2, T2), (None, None), (None, None)]
-# 4: [(None, None), (1, T1), (2, T2), (3, T3), (None, None)]
 
 
             try:
