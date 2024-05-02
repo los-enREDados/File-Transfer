@@ -486,8 +486,8 @@ class SocketRDT:
     def _enviar_paquete_SR(self, mensaje: bytes, seqNum: int, list_de_timeouts, cantPaquetesAenviar:int):
         # Busco el primer slot libre, voy a actualizar la lista de timeouts
         indiceEspacioVacio = -1
-        for i in range(len(lista_de_timeoutes_actualizada)):
-            espacioActual = lista_de_timeoutes_actualizada[i]
+        for i in range(len(list_de_timeouts)):
+            espacioActual = list_de_timeouts[i]
             if espacioActual[1] == None:
                 indiceEspacioVacio = i
                 break
@@ -595,7 +595,7 @@ class SocketRDT:
             try:
                 tiempoActual =  datetime.datetime.now()
 
-                seqNumPerdido, listaDeTimeouts = self._chequear_timeouts_(listaDeTimeouts, tiempoActual)
+                seqNumPerdido, listaDeTimeouts = self._chequear_timeouts(listaDeTimeouts, tiempoActual)
 
                 if seqNumPerdido != -1:
                     seqNumAEnviar = seqNumPerdido
