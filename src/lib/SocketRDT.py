@@ -587,7 +587,6 @@ class SocketRDT:
 # [0, 1, 2, 3, 4]
 # [0, 2]
 # [(None, None), (None, None), (None, None), (None, None), (None, None)]
-
 # 1: [(0, T0), (None, None), (None, None), (None, None), (None, None)]
 # 2: [(0, T0), (1, T1), (None, None), (None, None), (None, None)]
 # 3: [(0, T0), (1, T1), (2, T2), (None, None), (None, None)]
