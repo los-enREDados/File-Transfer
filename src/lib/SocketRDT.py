@@ -492,7 +492,8 @@ class SocketRDT:
             return list_de_timeouts, False
 
         # NOTE: Theo ama esto <3
-        if seqNum < ventana[0] or seqNum > ventana[0]:
+        if seqNum < ventana[0] or seqNum > ventana[1]:
+            print("JAMON")
             sys.exit("FUERA DE LA VENTANA >:D")
 
 
@@ -529,7 +530,7 @@ class SocketRDT:
     def _actualiza_acks_sr(self, listaDeTimeouts, seqNumRecibido):
         lista_de_timeoutes_actualizada = listaDeTimeouts
 
-        lista_de_timeoutes_actualizada[seqNumRecibido].timpoDeEnvio = None
+        lista_de_timeoutes_actualizada[seqNumRecibido].tiempoDeEnvio = None
         lista_de_timeoutes_actualizada[seqNumRecibido].ackeado = True 
         
         return lista_de_timeoutes_actualizada
@@ -576,15 +577,14 @@ class SocketRDT:
         #listaDeACKS     = [False] * cantPaquetesAenviar
         #listaDeACKS     = [False] * tamanoVentana
 
-        sequenceMasChicoSinACK = 0
         seqNumAEnviar = 0
         seqNumActual = 0 
 
         self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
 
-        while sequenceMasChicoSinACK != -1:
-
-
+        envieTodo = False
+        # while ventana[1] < cantPaquetesAenviar:
+        while envieTodo == False:
             try:
                 tiempoActual =  datetime.datetime.now()
 
@@ -610,13 +610,20 @@ class SocketRDT:
 
                 
                 seqNumRecibido = uint32Aint(ack_pkt)
+                print(f"|  Recibi ack: {seqNumRecibido}")
                 
                 listaDeTimeouts = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido)
 
                 if seqNumRecibido == ventana[0]:
                     nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
 
-                    ventana = [nuevoComienzoVentana, nuevoComienzoVentana + tamanoVentana]
+                    if nuevoComienzoVentana >= cantPaquetesAenviar:
+                        envieTodo = True
+
+                    nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
+                    # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
+
+                    ventana = [nuevoComienzoVentana, nuevoFin]
             
             except TimeoutError:
                 print("TIMEOUT")
@@ -624,8 +631,7 @@ class SocketRDT:
 
         self.skt.settimeout(None)  
 
-        # sys.exit("NO IMPLEMENTADO")
-        pass
+        print("TERMINE DE MANDAR")
 
 
     def _receive_selective(self,):
@@ -649,6 +655,8 @@ class SocketRDT:
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
 
             seqNumRecibido = paquete.getSequenceNumber() #5
+
+            print(f"|  Recibi seqNum: {seqNumRecibido}")
 
             self.skt.sendto(intAUint32(seqNumRecibido), self.peerAddr)
 
