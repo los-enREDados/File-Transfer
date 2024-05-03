@@ -453,7 +453,8 @@ class SocketRDT:
             if tiempo_de_envio == None:
                 continue
 
-            segundos_sin_ack = (tiempo_de_envio - tiempo_ahora).total_seconds()
+            segundos_sin_ack = (tiempo_ahora - tiempo_de_envio).total_seconds()
+            # print(f"SEGUNDOS SIN ACK: {segundos_sin_ack}")
 
             # Apenas encuentro uno, lo quiero reenviar
             if segundos_sin_ack > lib.constants.TIEMOUTPORPAQUETESR:
