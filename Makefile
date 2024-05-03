@@ -15,7 +15,7 @@ selectiveRepeat:
 
 flake8:
 	@echo -----------------------------------------------------
-	flake8  --exit-zero *.py lib/
+	flake8  --exit-zero src/
 
 # Si algun cliente de python quedo colgado, lo mato
 matarColgados:
