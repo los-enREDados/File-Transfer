@@ -569,32 +569,43 @@ class SocketRDT:
 # - payload
 # - Timetout
 # - ACK     
+
     def _recibir_paquetes_sender_SR(self, listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo):
-        ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
-        
- 
-        seqNumRecibido = uint32Aint(ack_pkt)
-        # print(f"|  Recibi ack: {seqNumRecibido}")
+        minSeqRecibido = None
+        try:
+            while True:
+                ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
 
-        listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
-        print(f"CANTIDAD ACKS {cantidadDePaquetesACKs}")
 
-        if seqNumRecibido == ventana[0]:
-            print("EXPANDO VENTANA")
-            nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
-            print(f'''
-            Mi ventana es: {ventana}
-            ''')
-            for i in range(len(listaDeTimeouts)):
-                print(f"{i} : {listaDeTimeouts[i]}")
+                seqNumRecibido = uint32Aint(ack_pkt)
+                # print(f"|  Recibi ack: {seqNumRecibido}")
+                listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
+                if minSeqRecibido == None:
+                    minSeqRecibido = seqNumRecibido
+                else:
+                    if seqNumRecibido < minSeqRecibido:
+                        minSeqRecibido = seqNumRecibido
 
-            if nuevoComienzoVentana >= cantPaquetesAenviar:
-                envieTodo = True
+                print(f"CANTIDAD ACKS {cantidadDePaquetesACKs}")
 
-            nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
-            # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
+        except BlockingIOError:
+            print("BLOCKING ERROR")
+            if minSeqRecibido == None:
+                return listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo
+            elif minSeqRecibido == ventana[0]:
+                print("EXPANDO VENTANA")
+                nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
+                # print(f'''
+                # Mi ventana es: {ventana}
+                # ''')
+                # for i in range(len(listaDeTimeouts)):
+                #     print(f"{i} : {listaDeTimeouts[i]}")
+                if nuevoComienzoVentana >= cantPaquetesAenviar:
+                    envieTodo = True
+                nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
+                # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
 
-            ventana = [nuevoComienzoVentana, nuevoFin]
+                ventana = [nuevoComienzoVentana, nuevoFin]
         return listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo
 
     def _sendall_selective(self, mensaje: bytes):
@@ -627,12 +638,16 @@ class SocketRDT:
         cantidadDePaquetesACKs = 0
         print("HOLA")
 
-        self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
+        # self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
+        self.skt.setblocking(False)
 
         envieTodo = False
         # while ventana[1] < cantPaquetesAenviar:
         while envieTodo == False:
             try:
+                huboTimeout = False
+                print(f"VALOR VENTANA: {ventana}")
+                # print(listaDeTimeouts[ventana[0]:ventana[1]])
                 tiempoActual =  datetime.datetime.now()
 
                 seqNumPerdido, listaDeTimeouts = self._chequear_timeouts(listaDeTimeouts, tiempoActual, ventana)
@@ -641,6 +656,7 @@ class SocketRDT:
                 # if seqNumPerdido == None:
                     print("HUBO UN TIMEOUT LOCAL DE LOS NUESTROS")
                     seqNumAEnviar = seqNumPerdido
+                    huboTimeout = True
                     
                 else:
                     seqNumAEnviar = seqNumActual
@@ -652,9 +668,10 @@ class SocketRDT:
                 listaDeTimeouts, pudeEnviar = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts, cantPaquetesAenviar, ventana, cantidadDePaquetesACKs)
                 
                 # NOTE: No va a poder enviar cuando la ventana este llena
-                if pudeEnviar == True:
+                if pudeEnviar == True and huboTimeout == False:
                     continue
 
+                print("ESCUCHO")
                 listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo = self._recibir_paquetes_sender_SR(listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo)
 
                 # ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
@@ -686,6 +703,7 @@ class SocketRDT:
                 print("TIMEOUT")
                 pass
 
+        self.skt.setblocking(True)
         llegoFin = False
         while llegoFin == False:
             try:
