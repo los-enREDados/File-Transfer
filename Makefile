@@ -28,7 +28,7 @@ server:
 	$(INTERPRETER) src/server.py
 
 
-crearPerdida: sacarPerdida
+crearPerdida:
 	tc qdisc add dev $(LOOPBACK) root netem delay 0 loss $(PERDIDA)
 
 sacarPerdida:
