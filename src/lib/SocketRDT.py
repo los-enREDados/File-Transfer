@@ -647,9 +647,6 @@ class SocketRDT:
                         print(f"{i} : {listaDeTimeouts[i]}")
 
                     if nuevoComienzoVentana >= cantPaquetesAenviar:
-                        paquete = Paquete(seqNumActual, lib.constants.FIN, b"")
-
-                        self.skt.sendto(paquete.misBytes, self.peerAddr)
                         envieTodo = True
 
                     nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
@@ -657,6 +654,23 @@ class SocketRDT:
 
                     ventana = [nuevoComienzoVentana, nuevoFin]
             
+            except TimeoutError:
+                print("TIMEOUT")
+                pass
+
+        llegoFin = False
+        while llegoFin == False:
+            try:
+                paquete = Paquete(seqNumActual + 1, lib.constants.FIN, b"")
+
+                self.skt.sendto(paquete.misBytes, self.peerAddr)
+
+                ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
+
+                seqNumRecibido = uint32Aint(ack_pkt)
+
+                if seqNumRecibido == seqNumActual + 1:
+                    break
             except TimeoutError:
                 print("TIMEOUT")
                 pass
