@@ -564,12 +564,38 @@ class SocketRDT:
 
 
 # [0, 1, 2, 3, 4]
-        pass  
 
 # Paquete
 # - payload
 # - Timetout
 # - ACK     
+    def _recibir_paquetes_sender_SR(self, listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo):
+        ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
+        
+ 
+        seqNumRecibido = uint32Aint(ack_pkt)
+        # print(f"|  Recibi ack: {seqNumRecibido}")
+
+        listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
+        print(f"CANTIDAD ACKS {cantidadDePaquetesACKs}")
+
+        if seqNumRecibido == ventana[0]:
+            print("EXPANDO VENTANA")
+            nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
+            print(f'''
+            Mi ventana es: {ventana}
+            ''')
+            for i in range(len(listaDeTimeouts)):
+                print(f"{i} : {listaDeTimeouts[i]}")
+
+            if nuevoComienzoVentana >= cantPaquetesAenviar:
+                envieTodo = True
+
+            nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
+            # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
+
+            ventana = [nuevoComienzoVentana, nuevoFin]
+        return listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo
 
     def _sendall_selective(self, mensaje: bytes):
 
@@ -629,30 +655,32 @@ class SocketRDT:
                 if pudeEnviar == True:
                     continue
 
-                ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
+                listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo = self._recibir_paquetes_sender_SR(listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo)
+
+                # ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
 
                 
-                seqNumRecibido = uint32Aint(ack_pkt)
-                # print(f"|  Recibi ack: {seqNumRecibido}")
+                # seqNumRecibido = uint32Aint(ack_pkt)
+                # # print(f"|  Recibi ack: {seqNumRecibido}")
                 
-                listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
-                print(f"CANTIDAD ACKS {cantidadDePaquetesACKs}")
+                # listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
+                # print(f"CANTIDAD ACKS {cantidadDePaquetesACKs}")
 
-                if seqNumRecibido == ventana[0]:
-                    nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
-                    print(f'''
-                    Mi ventana es: {ventana}
-                    ''')
-                    for i in range(len(listaDeTimeouts)):
-                        print(f"{i} : {listaDeTimeouts[i]}")
+                # if seqNumRecibido == ventana[0]:
+                #     nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
+                #     print(f'''
+                #     Mi ventana es: {ventana}
+                #     ''')
+                #     for i in range(len(listaDeTimeouts)):
+                #         print(f"{i} : {listaDeTimeouts[i]}")
 
-                    if nuevoComienzoVentana >= cantPaquetesAenviar:
-                        envieTodo = True
+                #     if nuevoComienzoVentana >= cantPaquetesAenviar:
+                #         envieTodo = True
 
-                    nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
-                    # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
+                #     nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
+                #     # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
 
-                    ventana = [nuevoComienzoVentana, nuevoFin]
+                #     ventana = [nuevoComienzoVentana, nuevoFin]
             
             except TimeoutError:
                 print("TIMEOUT")
