@@ -704,6 +704,8 @@ class SocketRDT:
                 pass
 
         self.skt.setblocking(True)
+        maxTimeouts = 4
+        timeoutCount = 0
         llegoFin = False
         while llegoFin == False:
             try:
@@ -718,6 +720,9 @@ class SocketRDT:
                 if seqNumRecibido == seqNumActual + 1:
                     break
             except TimeoutError:
+                timeoutCount += 1
+                if timeoutCount > maxTimeouts:
+                    break
                 print("TIMEOUT")
                 pass
 
