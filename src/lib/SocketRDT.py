@@ -146,10 +146,14 @@ class SocketRDT:
                     synAckAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
 
             except TimeoutError:
+                print("syncACK(): Timeout")
                 timeouts += 1
                 if timeouts >= maxTimeouts:
+                    print("syncACK(): Asumo que llego")
                     break
                 return False
+        print("syncACK() Fin")
+
 
 
 
@@ -161,7 +165,7 @@ class SocketRDT:
 
         while nuevoPuerto == b"":
             try: 
-                print("Enviando SYN a ", self.peerAddr)
+                print("connect() enviando SYN")
                 self.skt.sendto(lib.constants.MENSAJECONECCION, self.peerAddr)
                 nuevoPuerto, addr = self.skt.recvfrom(lib.constants.TAMANONUMERORED) 
                 if addr[0] != self.peerAddr[0]:
