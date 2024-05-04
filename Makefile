@@ -1,6 +1,6 @@
 LOOPBACK    := $(shell ls -l /sys/class/net/ | grep virtual | grep -v docker | awk '{ print $$NF }' | awk -F '/' '{ print $$NF }')
 PERDIDA     := 50
-ARCHIVO     := data/azul.jpeg
+ARCHIVO     := data/archivosParaEnviar/azul.jpeg
 INTERPRETER := python3
 
 ifeq ("$(RELEASE)", "debug")

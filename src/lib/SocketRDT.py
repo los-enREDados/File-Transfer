@@ -128,22 +128,22 @@ class SocketRDT:
 
         self.skt.sendto(mensaje, self.peerAddr)
 
-        synAckAck = b""
-        while synAckAck != lib.constants.MENSAJEACK
-        try: 
-            # Si me llego este mensaje significa que NO LE LLEGO. 
-            print("Viendo si recibo algo en synACK")
-            mensaje, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
-            print(f"Recibi {mensaje} mensaje de {addr}")
-            if mensaje == lib.constants.MENSAJECONECCION:
-                return False
-            else: 
-                self.skt.settimeout(None)
-                return True
+        # synAckAck = b""
+        # while synAckAck != lib.constants.MENSAJEACK
+        # try: 
+        #     # Si me llego este mensaje significa que NO LE LLEGO. 
+        #     print("Viendo si recibo algo en synACK")
+        #     mensaje, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
+        #     print(f"Recibi {mensaje} mensaje de {addr}")
+        #     if mensaje == lib.constants.MENSAJECONECCION:
+        #         return False
+        #     else: 
+        #         self.skt.settimeout(None)
+        #         return True
 
 
-        except TimeoutError:
-            return False
+        # except TimeoutError:
+            # return False
 
 
 
@@ -174,26 +174,6 @@ class SocketRDT:
 
         return
 
-
-    # def connect(self):
-    #     # ATTENTION: ¿La forma de conectarse es la misma entre stop and
-    #     # wait y selective repeat?
-    #     # ATTENTION: el "b" antes del string indica que son bytes
-    #     mensaje = lib.constants.MENSAJECONECCION
-
-    #     self.skt.sendto(mensaje, self.peerAddr)
-        
-    #     # ATTENTION: Lo importante, es el addres. Esta tiene el puerto
-    #     # con el que voy a hablar
-    #     synAck = b""
-    #     while synAck != lib.constants.MENSAJEACEPTARCONECCION:
-    #         # No me interesa lo que me manden HASTA QUE alguien me
-    #         # mande un SYNACK
-    #         synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) # buffer size is 1024 bytes
-
-    #     # Actualizo el peer addres, poniendo ahora el puerto nuevo
-    #     self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
-
     def sendall(self, mensaje:bytes):
         if self.tipo == "SW":
             self._sendall_stop_and_wait(mensaje)
@@ -218,8 +198,6 @@ class SocketRDT:
         
         return mensaje
 
-    # def _send_stop_and_wait(self,)
-
     def _pkt_sent_ok(self, ack_pkt: bytes, seqNum: int):
         # Aclaracion: El ACK es directamente el numero de 
         # paquete recibido por el otro
@@ -230,58 +208,26 @@ class SocketRDT:
     def _sendall_stop_and_wait(self, mensaje: bytes):
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
 
-        # print("\033[92m")
-        # print("==================INICIO SENDALL==================")
-        # print("\033[0m")
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
-        # Header:
-        # Sequence number
-        # Fin
-        
-        #test = False
-        #print(f"mensaje: {mensaje}")
+
         print(f"cantPaquetesAenviar: {cantPaquetesAenviar}")
 
         seqNum = 0
         while seqNum <= cantPaquetesAenviar:
-            #print(f"************PAQUETE SEQNUM: {seqNum}************")
            
             try: 
-                #------------------------------------------------------------------------------------------------------------------------\
-                #     ___                                                                                          _                    #|
-                #    / _ \                                                                                        | |                   #|
-                #   / /_\ \_ __ _ __ ___   __ _ _ __ ___   ___  ___    _   _ _ __     _ __   __ _  __ _ _   _  ___| |_ ___              #|
-                #   |  _  | '__| '_ ` _ \ / _` | '_ ` _ \ / _ \/ __|  | | | | '_ \   | '_ \ / _` |/ _` | | | |/ _ \ __/ _ \             #|
-                #   | | | | |  | | | | | | (_| | | | | | | (_) \__ \  | |_| | | | |  | |_) | (_| | (_| | |_| |  __/ ||  __/             #|
-                #   \_| |_/_|  |_| |_| |_|\__,_|_| |_| |_|\___/|___/   \__,_|_| |_|  | .__/ \__,_|\__, |\__,_|\___|\__\___|             #|
-                #                                                                    | |             | |                                #|
-                #                                                                    |_|             |_|                                #|
-                                                                                                                                        #|
-                                                                                                                                        #|                
-                indiceInicial = seqNum * lib.constants.TAMANOPAQUETE                                                                    #|
-                indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1     #|           
-                                                                                                                                        #|
-                payloadActual = mensaje[indiceInicial:indiceFinal]                                                                      #|
-                                                                                                                                        #|
-                                                                                                                                        #|
-                                                                                                                                        #|
-                if seqNum == cantPaquetesAenviar:                                                                                       #|
-                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
-                else:                                                                                                                   #|
-                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)                                                       #|
-                                                                                                                                        #|
-                                                                                                                                        #|
-                                                                                                                                        #|
-                                                                                                                                        #|
-                # ----------------------------------------------------------------------------------------------------------------------/
+
+                indiceInicial = seqNum * lib.constants.TAMANOPAQUETE
+                indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
+
+                payloadActual = mensaje[indiceInicial:indiceFinal]
+
                 
-                # Enviamos el paquete
-                # print("+-----enviando paquete:------+")
-                # print(f"|  seqNum: {seqNum}")
-                # print(f"|  fin: {paquete.fin}")
-                # print(f"|  payload: {payloadActual}")
-                # print(f"+-----------------------------+")
+                if seqNum == cantPaquetesAenviar:
+                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)
+                else:
+                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
 
                 print(f"Enviando paquete a {self.peerAddr}")
                 print(f"seqNum: {seqNum}")
@@ -303,87 +249,21 @@ class SocketRDT:
                 print("TIMEOUT")
                 pass
             
-                # numPaqueteRecibo, _ = self.skt.recvfrom(lib.constants.TAMANOHEADER)
-                # numPaqueteRecibo = uint32Aint(numPaqueteRecibo)
-                
-                # if numPaqueteRecibo != numPaquete:
-                #     # Yo le queria enviar un numero distinto; pero
-                #     # me dijo que estaba esperando un numero distinto
-                #     # en ese caso, tengo que enviarle lo que el espera
-                #     # esto deberia ser SIEMPRE? el numero anterior
-                #     # por como funciona el stop and wait
-                #     numPaquete = numPaqueteRecibo
-                #     if numPaquete == cantPaquetesAenviar:
-                #         break
-
-                #     raise IndexError
-
-                # # Cada paquete es: primeros 4 bytes para el secuence numbers
-                # # siguientes es data
-                # indiceInicial = numPaquete*lib.constants.TAMANOPAQUETE
-                # indiceFinal = (numPaquete + 1) *lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1 
-                # print(f"Numero paquete: {numPaquete}")
-
-                # payloadActual = mensaje[indiceInicial:indiceFinal]
-                # paquete = Paquete(numPaquete, payloadActual)
-
-                # # WARNING: Este codigo existe solo para dropear un paquete
-                # # articifialmente. Lo mismo la variable test
-                # if not(numPaquete == 2 and test == True):
-                #     self.skt.sendto(paquete.misBytes, self.peerAddr)
-                # else:
-                #     test = False
-                #     print("Pierdo un paquete a proposito")
-
-
-                # numPaquete += 1
-
-  
         self.skt.settimeout(None)
     
-        # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
-
-        # pass
-        # print("\033[92m")
-        # print("==================TERMINO SENDALL==================")
-        # print("\033[0m")
         return
     
 
     def _receive_stop_and_wait(self,):
-        # Esto me va a devolver un addr y data.
-        # addr yo "en teoria" ya lo conozco
-        # data es lo importante. TODO: Chequear misma direccion
-        
-        # cantPaquetes, _ = self._recieve(lib.constants.TAMANOHEADER)
-        # cantPaquetes = uint32Aint(cantPaquetes)
-
-        # self.skt.sendto(lib.constants.MENSAJEACK, self.peerAddr)
-        
-        # self.skt.settimeout(lib.constants.TIMEOUT);
-        # print("\033[93m")
-        # print("==================INICIO RECEIVEALL==================")
-        # print("\033[0m")
-
-
-        
         mensajeFinal = bytearray()
 
         es_fin = False
         ultimoSeqNumACK = -1
         while not es_fin:
 
-            #print(f"*******PAQUETE SEQNUM QUE ESPERO: {ultimoSeqNumACK + 1}*******")
-
-            # Recibo paquete
             bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
        
             paquete = Paquete.Paquete_from_bytes(bytes_paquete)
-            # print("+-----paquete recibido:------+")
-            # print(f"|  seqNum: {paquete.getSequenceNumber()}")
-            # print(f"|  fin: {paquete.fin}")
-            # print(f"|  payload: {paquete.payload}")
-            # print(f"+-----------------------------+")
 
             seqNumRecibido = paquete.getSequenceNumber() #5
             
@@ -401,64 +281,6 @@ class SocketRDT:
             seqNumAEnviar = paquete.getSequenceNumber()
             self.skt.sendto(intAUint32(seqNumAEnviar), self.peerAddr)
         
-        # empiezo a contar
-        # recibo por las dudas
-        # mando ack
-        #
-
-
-        # test = False
-
-        # seqNum = 0
-        # while seqNum <= cantPaquetes:
-        #     pass
-            #
-            # try:
-
-                # # ATTENTION: Puede parecer extrano que el reciever le
-                # # mande el sequence number primero al sender.
-                # # Es medio raro.
-                # # Esta fue la mejor solucion que se me ocurrio al
-                # # problema de "Que pasa si EL SENDER" tiene timeout
-                # numPaqueteActualUint = intAUint32(seqNum)
-                # self.skt.sendto(numPaqueteActualUint, self.peerAddr)
-
-                # # WARNING: Este codigo existe solo para dropear un paquete
-                # # articifialmente. Lo mismo la variable test
-                # if seqNum == 3 and test == True:
-                #     print("Pierdo paquete")
-                #     test = False
-                #     continue
-
-                # data, _ = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) # buffer size is 1024 bytes
-
-                # seqNum = uint32Aint(data[0:lib.constants.TAMANOHEADER])
-                # seqNum += 1
-
-                # message = data[lib.constants.TAMANOHEADER + 1:]
-
-                # mensajeFinal.extend(message)
-                # print(seqNum)
-                # print(message)
-
-                # print(f"seq {seqNum}")
-                # print(f"cant {cantPaquetes}")
-
-                # numPaquete += 1
-            # except TimeoutError:
-            #     # Volver a ejecutar
-            #     print("TIMEOUT")
-            #     pass
-
-        # Lo ponemos de vuelta en modo bloqueante:
-        # Fuente: https://docs.python.org/3/library/socket.html#socket.socket.settimeout
-        # self.skt.settimeout(None)
-
-        # sys.exit("\033[91mDE ACA EN ADELANTE, NO ESTA IMPLEMENTADO\033[0m")
-
-        # print("\033[93m")
-        # print("==================TERMINO RECEIVEALL==================")
-        # print("\033[0m")
         return mensajeFinal
 
     def _chequear_timeouts(self, lista_de_timeouts, tiempo_ahora, ventana):
@@ -466,7 +288,6 @@ class SocketRDT:
 
         seq_number_perdido = -1
         for i in range(ventana[0], ventana[1] + 1):
-            # print(f"\033]93mChequeando timeout de secuencia: {i}\033]0m")
             celda = lista_de_timeouts_actualizada[i]
             seq_number = i
             tiempo_de_envio = celda.tiempoDeEnvio
@@ -528,9 +349,6 @@ class SocketRDT:
             sys.exit("FUERA DE LA VENTANA >:D")
 
 
-        # Busco el primer slot libre, voy a actualizar la lista de timeouts
-
-
         # NOTE: Si llegue hasta significa que hay espacio en la ventana
 
         indiceInicial = seqNum * lib.constants.TAMANOPAQUETE
@@ -538,13 +356,7 @@ class SocketRDT:
         payloadActual = mensaje[indiceInicial:indiceFinal]
 
         print(f"MANDO EL PAQUETE CON SEQ {seqNum}")
-        # print(f"{cantidadACK}/{cantPaquetesAenviar}")
-        # if cantidadACK + 1 == cantPaquetesAenviar:
-        #     print("MANDO EL ULTIMO")
-        # if seqNum == cantPaquetesAenviar - 1:                                                                                       #|
-        #     paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)                                                         #|
-        # else:                                                                                                                   #|
-        #     paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
+
         paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
 
         self.skt.sendto(paquete.misBytes, self.peerAddr)
@@ -573,22 +385,6 @@ class SocketRDT:
         
         return lista_de_timeoutes_actualizada, cantidadDeACKS
 
-# [0, 1, 2, 3, 4]
-# [0,2]
-
-# PaqueteActual = ventana[0]
-# if PaqueteActual <= ventana[fin]:
-    #mandar paquete
-    #PaqueteActual += 1
-
-
-# [0, 1, 2, 3, 4]
-
-# Paquete
-# - payload
-# - Timetout
-# - ACK     
-
     def _recibir_paquetes_sender_SR(self, listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo):
         minSeqRecibido = None
         try:
@@ -597,7 +393,7 @@ class SocketRDT:
 
 
                 seqNumRecibido = uint32Aint(ack_pkt)
-                # print(f"|  Recibi ack: {seqNumRecibido}")
+
                 listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
                 if minSeqRecibido == None:
                     minSeqRecibido = seqNumRecibido
@@ -614,15 +410,10 @@ class SocketRDT:
             elif minSeqRecibido == ventana[0]:
                 print("EXPANDO VENTANA")
                 nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
-                # print(f'''
-                # Mi ventana es: {ventana}
-                # ''')
-                # for i in range(len(listaDeTimeouts)):
-                #     print(f"{i} : {listaDeTimeouts[i]}")
+
                 if nuevoComienzoVentana >= cantPaquetesAenviar:
                     envieTodo = True
                 nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
-                # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
 
                 ventana = [nuevoComienzoVentana, nuevoFin]
         return listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo
@@ -646,39 +437,28 @@ class SocketRDT:
         # listadeTimeous = [(tiempoDeEnvio, ackeado), ...]
         listaDeTimeouts = [CeldaSR()] * cantPaquetesAenviar
 
-        # listaDeTimeouts = [[None, False]] * cantPaquetesAenviar
-        
-
-        #listaDeACKS     = [False] * cantPaquetesAenviar
-        #listaDeACKS     = [False] * tamanoVentana
-
         seqNumAEnviar = 0
         seqNumActual = 0 
         cantidadDePaquetesACKs = 0
         print("HOLA")
 
-        # self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
         self.skt.setblocking(False)
 
         envieTodo = False
-        # while ventana[1] < cantPaquetesAenviar:
         while envieTodo == False:
             huboTimeout = False
             print(f"VALOR VENTANA: {ventana}")
-            # print(listaDeTimeouts[ventana[0]:ventana[1]])
             tiempoActual =  datetime.datetime.now()
 
             seqNumPerdido, listaDeTimeouts = self._chequear_timeouts(listaDeTimeouts, tiempoActual, ventana)
 
             if seqNumPerdido != -1:
-            # if seqNumPerdido == None:
                 print("HUBO UN TIMEOUT LOCAL DE LOS NUESTROS")
                 seqNumAEnviar = seqNumPerdido
                 huboTimeout = True
 
             else:
                 seqNumAEnviar = seqNumActual
-            #    seqNumActual = self._obtener_primer_paquete_no_ack(listaDeACKS, sequenceMasChicoSinACK, ventana)
                 if seqNumAEnviar < ventana[1]:
                     seqNumActual += 1
 
@@ -692,31 +472,6 @@ class SocketRDT:
             print("ESCUCHO")
             listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo = self._recibir_paquetes_sender_SR(listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo)
 
-                # ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
-
-                
-                # seqNumRecibido = uint32Aint(ack_pkt)
-                # # print(f"|  Recibi ack: {seqNumRecibido}")
-                
-                # listaDeTimeouts, cantidadDePaquetesACKs = self._actualiza_acks_sr(listaDeTimeouts, seqNumRecibido, cantidadDePaquetesACKs)
-                # print(f"CANTIDAD ACKS {cantidadDePaquetesACKs}")
-
-                # if seqNumRecibido == ventana[0]:
-                #     nuevoComienzoVentana = self._obtener_nuevo_comienzo_ventana(listaDeTimeouts, ventana)
-                #     print(f'''
-                #     Mi ventana es: {ventana}
-                #     ''')
-                #     for i in range(len(listaDeTimeouts)):
-                #         print(f"{i} : {listaDeTimeouts[i]}")
-
-                #     if nuevoComienzoVentana >= cantPaquetesAenviar:
-                #         envieTodo = True
-
-                #     nuevoFin = min(cantPaquetesAenviar - 1, nuevoComienzoVentana + tamanoVentana)
-                #     # nuevoFin = nuevoComienzoVentana + tamanoVentana - 1
-
-                #     ventana = [nuevoComienzoVentana, nuevoFin]
-            
         self.skt.setblocking(True)
 
         self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
