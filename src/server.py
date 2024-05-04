@@ -53,7 +53,7 @@ class Listener:
         def handshake(self, addressCliente, myIP, paquete):
             socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
             nuevoPuerto = socketRDT.skt.getsockname()[1]
-            socketRDT.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
+            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
 
             worker(socketRDT, paquete)
 

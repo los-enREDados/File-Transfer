@@ -175,7 +175,7 @@ class SocketRDT:
                 if timeouts >= maxTimeouts:
                     print("syncACK(): Asumo que llego")
                     break
-                return False
+                # return False
             
             
         print("syncACK() Fin")
@@ -186,7 +186,7 @@ class SocketRDT:
 
     def connect(self, tipo, nombre_archivo):
         msg_bytes = strABytes(nombre_archivo)
-        paquete = Paquete(0, lib.constants.CONNECT, tipo, lib.constants.NOFIN, lib.constants.NOERROR, msg_bytes)
+        paquete = Paquete(0, lib.constants.CONNECT, tipo, lib.constants.NOFIN, 0, msg_bytes)
         
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
         nuevoPuerto = b""
@@ -398,7 +398,7 @@ class SocketRDT:
 
         print(f"MANDO EL PAQUETE CON SEQ {seqNum}")
 
-        paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
+        paquete = Paquete(seqNum, lib.constants.NOCONNECT, lib.constants.UPLOAD, lib.constants.NOFIN, 0, payloadActual)
 
         self.skt.sendto(paquete.misBytes, self.peerAddr)
 
@@ -522,7 +522,7 @@ class SocketRDT:
         llegoFin = False
         while llegoFin == False:
             try:
-                paquete = Paquete(seqNumActual + 1, lib.constants.FIN, b"")
+                paquete = Paquete(seqNumActual + 1, lib.constants.NOCONNECT, lib.constants.UPLOAD, lib.constants.FIN, 0, b"")
 
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
