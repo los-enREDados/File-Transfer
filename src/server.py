@@ -42,14 +42,24 @@ class Listener:
             # Cada worker deberia estar en su propio thread
             addr  = self.recieveSocket.acceptConnection()
 
-            worker(addr, UDP_IP)
+
+            self.handshake(addr, UDP_IP)
+            # worker(addr, UDP_IP)
             # w = Worker(addr, UDP_IP)
             # w.hablar()
 
+        def handshake(self, addressCliente, myIP):
+            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
+            nuevoPuerto = socketRDT.skt.getsockname()[1]
+            self.recieveSocket.syncAck(nuevoPuerto, socketRDT)
 
-def worker(addressCliente, myIP):
-    socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
-    socketRDT.syncAck()
+            worker(socketRDT)
+
+
+def worker(socketRDT):
+    # socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
+    # socketRDT.syncAck()
+    # addressCliente = socketRDT.skt.getpeername()
 
     tipoYnombre = socketRDT.receive_all()
     tipo = tipoYnombre[0:len(lib.constants.MENSAJEUPLOAD)]
@@ -67,7 +77,7 @@ def worker(addressCliente, myIP):
         # if tipo == lib.constants.MENSAJEUPLOAD:
         #archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
         
-        print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
+        # print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
         archivo_recibido = socketRDT.receive_all()
     
         print("\033[92mArchivo Recibido!\033[0m")

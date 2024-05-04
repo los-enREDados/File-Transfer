@@ -94,12 +94,14 @@ class SocketRDT:
         # Si yo quiero hablar con alguien, uso la direccion para hablar
         self.skt = socket.socket(socket.AF_INET, # Internet
                              socket.SOCK_DGRAM) # UDP
+
         
         # Cuando bind tiene un 0 de segundo argumento nos da un puerto
         # nuevo cada vez. Fuente: https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
         # ATTENTION: Necesitamos bindearlo siempre porque tanto cliente
         # como servidor van a enviar y recibir cosas.
         self.skt.bind((myIP, myPort))
+        print(self.skt.getsockname())
 
         # ATTENTION: No se si hace falta guardar "mi propio address"
         # Lo pongo por si lo llegamos a necesitar
@@ -121,44 +123,47 @@ class SocketRDT:
         return addr
         
 
-    def syncAck(self):
+    def syncAck(self, puertoNuevo: int, socketRDT):
         # Este mensaje podria ser mas corto o no estar directamente
         # Solo necesitamos mandarle esto para que reciba la direccion
-        mensaje = lib.constants.MENSAJEACEPTARCONECCION
+        # mensaje = lib.constants.MENSAJEACEPTARCONECCION
+        mensaje = intAUint32(puertoNuevo)
+        print(type(mensaje))
 
-        self.skt.sendto(mensaje, self.peerAddr)
+        
+        self.skt.settimeout(lib.constants.TIMEOUTSENDER)
+        synAckAck = b""
+        maxTimeouts = 4
+        timeouts = 0 
+        while synAckAck != lib.constants.MENSAJEACK:
+            try: 
+                # Si me llego este mensaje significa que NO LE LLEGO. 
+                print("Viendo si recibo algo en synACK")
+                self.skt.sendto(mensaje, socketRDT.peerAddr)
+                synAckAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION), socket.MSG_PEEK)
 
-        # synAckAck = b""
-        # while synAckAck != lib.constants.MENSAJEACK
-        # try: 
-        #     # Si me llego este mensaje significa que NO LE LLEGO. 
-        #     print("Viendo si recibo algo en synACK")
-        #     mensaje, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
-        #     print(f"Recibi {mensaje} mensaje de {addr}")
-        #     if mensaje == lib.constants.MENSAJECONECCION:
-        #         return False
-        #     else: 
-        #         self.skt.settimeout(None)
-        #         return True
+                if synAckAck == lib.constants.MENSAJEACEPTARCONECCION:
+                    synAckAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
 
-
-        # except TimeoutError:
-            # return False
+            except TimeoutError:
+                timeouts += 1
+                if timeouts >= maxTimeouts:
+                    break
+                return False
 
 
 
 
     def connect(self):
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
-        synAck = b""
+        nuevoPuerto = b""
         addr = 0
 
-        while synAck != lib.constants.MENSAJEACEPTARCONECCION:
-           
+        while nuevoPuerto == b"":
             try: 
                 print("Enviando SYN a ", self.peerAddr)
                 self.skt.sendto(lib.constants.MENSAJECONECCION, self.peerAddr)
-                synAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJEACEPTARCONECCION)) 
+                nuevoPuerto, addr = self.skt.recvfrom(lib.constants.TAMANONUMERORED) 
                 if addr[0] != self.peerAddr[0]:
                     print("Contesto otro server")
                     raise ValueError("Se conecto a otro servidor")
@@ -168,8 +173,9 @@ class SocketRDT:
                 print("TIMEOUT")
                 pass
           
+        nuevoPuerto = uint32Aint(nuevoPuerto)
         self.skt.settimeout(None)
-        self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], addr[lib.constants.PUERTOTUPLA])
+        self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], nuevoPuerto)
 
 
         return
