@@ -525,35 +525,40 @@ class SocketRDT:
         # [0, 1, 2, 3, 4]
         # [0, 1, 2, 3, 4]
         # cant_recibios = 5
-        while True:
-            print(f"{cant_recibidos}")
-            if seq_num_de_fin != None and cant_recibidos == seq_num_de_fin+1:
-                print("BREAK")
-                pass
-                break
-       
-            bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
 
-            paquete = Paquete.Paquete_from_bytes(bytes_paquete)
+        self.skt.settimeout(100)
+        try:
+            while True:
+                print(f"{cant_recibidos}")
+                if seq_num_de_fin != None and cant_recibidos == seq_num_de_fin+1:
+                    print("BREAK")
+                    pass
+                    break
 
-            seqNumRecibido = paquete.getSequenceNumber() #5
+                bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
 
-            print(f"|  Recibi seqNum: {seqNumRecibido}")
+                paquete = Paquete.Paquete_from_bytes(bytes_paquete)
 
-            self.skt.sendto(intAUint32(seqNumRecibido), self.peerAddr)
+                seqNumRecibido = paquete.getSequenceNumber() #5
 
-            payload = paquete.getPayload()
+                print(f"|  Recibi seqNum: {seqNumRecibido}")
 
-            
-            if seqNumRecibido not in mensajeFinal:
-                mensajeFinal[seqNumRecibido] = payload
-                cant_recibidos += 1
+                self.skt.sendto(intAUint32(seqNumRecibido), self.peerAddr)
 
+                payload = paquete.getPayload()
 
-            es_fin = paquete.fin
-            if es_fin == True:
-                print("LLEGO EL FIN")
-                seq_num_de_fin = seqNumRecibido
+                es_fin = paquete.fin
+                if es_fin == True and seqNumRecibido not in mensajeFinal:
+                    print("LLEGO EL FIN")
+                    seq_num_de_fin = seqNumRecibido
+
+                if seqNumRecibido not in mensajeFinal:
+                    mensajeFinal[seqNumRecibido] = payload
+                    cant_recibidos += 1
+
+        except TimeoutError:
+            print("WARNING: Timeout, asumo que termino")
+
 
 
         mensaje = bytearray()
