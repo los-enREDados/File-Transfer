@@ -128,6 +128,25 @@ class SocketRDT:
 
         self.skt.sendto(mensaje, self.peerAddr)
 
+        synAckAck = b""
+        while synAckAck != lib.constants.MENSAJEACK
+        try: 
+            # Si me llego este mensaje significa que NO LE LLEGO. 
+            print("Viendo si recibo algo en synACK")
+            mensaje, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
+            print(f"Recibi {mensaje} mensaje de {addr}")
+            if mensaje == lib.constants.MENSAJECONECCION:
+                return False
+            else: 
+                self.skt.settimeout(None)
+                return True
+
+
+        except TimeoutError:
+            return False
+
+
+
 
     def connect(self):
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
