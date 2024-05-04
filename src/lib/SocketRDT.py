@@ -162,7 +162,7 @@ class SocketRDT:
                 self.skt.sendto(paquete.misBytes, socketRDT.peerAddr)
                 synAckAck, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE, socket.MSG_PEEK)
                 
-                if addr[0] != self.peerAddr[0]:
+                if addr != self.peerAddr:
                     print("Contesto otro server")
                     continue
                                     
@@ -176,6 +176,8 @@ class SocketRDT:
                     print("syncACK(): Asumo que llego")
                     break
                 return False
+            
+            
         print("syncACK() Fin")
 
 

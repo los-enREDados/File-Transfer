@@ -1,7 +1,9 @@
 import sys
 import socket
 # import struct
-import os 
+import os
+
+import lib.SocketRDT 
 print(os.getcwd())
 
 
@@ -51,27 +53,26 @@ class Listener:
         def handshake(self, addressCliente, myIP, paquete):
             socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
             nuevoPuerto = socketRDT.skt.getsockname()[1]
-            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
+            socketRDT.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
 
-            worker(socketRDT)
+            worker(socketRDT, paquete)
 
 
-def worker(socketRDT):
+def worker(socketRDT, paquete):
     # socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
     # socketRDT.syncAck()
-    # addressCliente = socketRDT.skt.getpeername()
-
-    tipoYnombre = socketRDT.receive_all()
-    tipo = tipoYnombre[0:len(lib.constants.MENSAJEUPLOAD)]
+    # addressCliente = socketRDT.skt.getpeername() 
+    nombre = bytesAstr(paquete.getPayload())
+    tipo = paquete.tipo
     # Con esto vemos si es upload (UPL) o Download (DOW)
     # Por ahora que solo estamos implementando upload no lo usamos
     
-    pathArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
-    pathArchivo = bytesAstr(pathArchivo)
+    # pathArchivo = nombre[len(lib.constants.MENSAJEUPLOAD):]
+    # pathArchivo = bytesAstr(pathArchivo)
 
-    if tipo == lib.constants.MENSAJEUPLOAD:
+    if tipo == lib.constants.UPLOAD:
 
-        nombreArchivo = pathArchivo.split("/")[-1]
+        nombreArchivo = nombre.split("/")[-1]
     
         # TODO: No me capta el tipo correctamente. Arreglar
         # if tipo == lib.constants.MENSAJEUPLOAD:
@@ -87,7 +88,7 @@ def worker(socketRDT):
             file.write(archivo_recibido)
 
 
-    elif tipo == lib.constants.MENSAJEDOWNLOAD:
+    elif tipo == lib.constants.DOWNLOAD:
         socketRDT.sendall("ack".encode())
 
         try: 
