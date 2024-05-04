@@ -47,23 +47,31 @@ class Paquete:
 
     # ATTENTION: Ver comentario "STRUCTS" a pie de pagina
     '''
-        |-------------------|
-        | Seq number | Fin  |
-        |------------+------|
-        |                   |
-        |     Data   :D     |
-        |-------------------|
+        +---------------------+---------------------+-------------------+
+        | Sequence Number 2b | Connect 1B | Tipo 1B | Fin 1B | Error 1B |
+        +---------------------+---------------------+-------------------+
+        |                                                               |
+        |                            Data 500B                          |
+        |                                                               |
+        +---------------------+---------------------+-------------------+
+    
     '''
-    #                     4 bytes      1 byte
-    def __init__(self, sequence_number, fin, datos: bytes):
+    #                  1byte  1byte     4bytes                     1byte          1bytes
+    def __init__(self, sequence_number:int, connect:int, tipo:int, fin:int, error:int, datos: bytes):
         sequenceNumberBin = intAUint32(sequence_number)
         
+        self.connect = connect
+        self.tipo = tipo
         self.seqNum = sequenceNumberBin
         self.fin = fin
+        self.error = error
         self.payload = datos
 
         self.misBytes = bytearray(sequenceNumberBin)
+        self.misBytes.extend(connect.to_bytes(1, 'big'))
+        self.misBytes.extend(tipo.to_bytes(1, 'big'))
         self.misBytes.extend(fin.to_bytes(1, 'big'))
+        self.misBytes.extend(error.to_bytes(1, 'big'))
         self.misBytes.extend(datos)
     
     def getPayload(self):        
@@ -74,11 +82,15 @@ class Paquete:
         return seqNumLocal
 
     @staticmethod 
-    def Paquete_from_bytes(bytes_paquete: bytes):    
-        seqNum = uint32Aint(bytes_paquete[0:lib.constants.TAMANONUMERORED])
-        fin = bytes_paquete[lib.constants.TAMANONUMERORED]
+    def Paquete_from_bytes(bytes_paquete: bytes):
+        seqNum  = uint32Aint(bytes_paquete[0:lib.constants.TAMANONUMERORED])
+        connect = bytes_paquete[lib.constants.TAMANONUMERORED]
+        tipo = bytes_paquete[lib.constants.TAMANONUMERORED + 1]
+        fin = bytes_paquete[lib.constants.TAMANONUMERORED + 2]
+        error = bytes_paquete[lib.constants.TAMANONUMERORED + 3]
         payload = bytes_paquete[lib.constants.TAMANOHEADER:]
-        return Paquete(seqNum, fin, payload)
+        
+        return Paquete(seqNum, connect, tipo, fin, error, payload)
 
 
 
