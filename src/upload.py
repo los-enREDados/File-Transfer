@@ -24,9 +24,8 @@ def upload(path):
 
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    serverSCK.connect()
+    serverSCK.connect(lib.constants.UPLOAD)
 
-    
     lib.ProtocoloFS.mandarArchivo(serverSCK, path)
 
 

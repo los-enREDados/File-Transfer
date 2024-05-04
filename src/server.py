@@ -40,18 +40,18 @@ class Listener:
         def listen(self):
             # TODO: Poner en un loop y hacer que esto sea multithread
             # Cada worker deberia estar en su propio thread
-            addr  = self.recieveSocket.acceptConnection()
+            paquete, addr  = self.recieveSocket.acceptConnection()
 
 
-            self.handshake(addr, UDP_IP)
+            self.handshake(addr, UDP_IP, paquete)
             # worker(addr, UDP_IP)
             # w = Worker(addr, UDP_IP)
             # w.hablar()
 
-        def handshake(self, addressCliente, myIP):
+        def handshake(self, addressCliente, myIP, paquete):
             socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
             nuevoPuerto = socketRDT.skt.getsockname()[1]
-            self.recieveSocket.syncAck(nuevoPuerto, socketRDT)
+            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
 
             worker(socketRDT)
 

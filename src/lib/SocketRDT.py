@@ -56,7 +56,7 @@ class Paquete:
         +---------------------+---------------------+-------------------+
     
     '''
-    #                  1byte  1byte     4bytes                     1byte          1bytes
+    #                       4bytes            1byte     1byte     1bytes    1bytes       500bytes
     def __init__(self, sequence_number:int, connect:int, tipo:int, fin:int, error:int, datos: bytes):
         sequenceNumberBin = intAUint32(sequence_number)
         
@@ -127,20 +127,28 @@ class SocketRDT:
     def acceptConnection(self,):
         mensajeConeccion = b""
 
+        paquete = None
+
         # Voy a pedir conecciones hasta que alguien me mande el SYN
-        while mensajeConeccion != lib.constants.MENSAJECONECCION:
+        while mensajeConeccion != lib.constants.CONNECT:
             print(f"Server esperando conexiones en {self.myAddress}")
-            mensajeConeccion, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
+            paquete_recibido, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE)
+            paquete = Paquete.Paquete_from_bytes(paquete_recibido)
+            mensajeConeccion = paquete.connect
             print(f"Recibi {mensajeConeccion} mensaje de {addr}")
-        return addr
+            
+        return paquete, addr
         
 
-    def syncAck(self, puertoNuevo: int, socketRDT):
+    def syncAck(self, puertoNuevo: int, socketRDT, paqueteRecibido):
         # Este mensaje podria ser mas corto o no estar directamente
         # Solo necesitamos mandarle esto para que reciba la direccion
         # mensaje = lib.constants.MENSAJEACEPTARCONECCION
-        mensaje = intAUint32(puertoNuevo)
-        print(type(mensaje))
+        datos = intAUint32(puertoNuevo)
+
+        tipoConexion = paqueteRecibido.tipo
+        paquete = Paquete(0, lib.constants.CONNECT, tipoConexion, 0, 0, datos)
+        # print(type(mensaje))
 
         
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
@@ -151,11 +159,15 @@ class SocketRDT:
             try: 
                 # Si me llego este mensaje significa que NO LE LLEGO. 
                 print("Viendo si recibo algo en synACK")
-                self.skt.sendto(mensaje, socketRDT.peerAddr)
-                synAckAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION), socket.MSG_PEEK)
-
+                self.skt.sendto(paquete.misBytes, socketRDT.peerAddr)
+                synAckAck, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE, socket.MSG_PEEK)
+                
+                if addr[0] != self.peerAddr[0]:
+                    print("Contesto otro server")
+                    continue
+                                    
                 if synAckAck == lib.constants.MENSAJEACEPTARCONECCION:
-                    synAckAck, addr = self.skt.recvfrom(len(lib.constants.MENSAJECONECCION))
+                    synAckAck, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE)
 
             except TimeoutError:
                 print("syncACK(): Timeout")
@@ -170,7 +182,10 @@ class SocketRDT:
 
 
 
-    def connect(self):
+    def connect(self, tipo, nombre_archivo):
+        msg_bytes = strABytes(nombre_archivo)
+        paquete = Paquete(0, lib.constants.CONNECT, tipo, lib.constants.NOFIN, lib.constants.NOERROR, msg_bytes)
+        
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
         nuevoPuerto = b""
         addr = 0
@@ -178,8 +193,8 @@ class SocketRDT:
         while nuevoPuerto == b"":
             try: 
                 print("connect() enviando SYN")
-                self.skt.sendto(lib.constants.MENSAJECONECCION, self.peerAddr)
-                nuevoPuerto, addr = self.skt.recvfrom(lib.constants.TAMANONUMERORED) 
+                self.skt.sendto(paquete.misBytes, self.peerAddr)
+                paqueteRecibido, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) 
                 if addr[0] != self.peerAddr[0]:
                     print("Contesto otro server")
                     raise ValueError("Se conecto a otro servidor")
@@ -188,8 +203,10 @@ class SocketRDT:
                 # Volver a ejecutar
                 print("TIMEOUT")
                 pass
-          
-        nuevoPuerto = uint32Aint(nuevoPuerto)
+        
+        paqueteRecibido = Paquete.Paquete_from_bytes(paqueteRecibido)
+        nuevoPuerto = paqueteRecibido.getPayload()
+        
         self.skt.settimeout(None)
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], nuevoPuerto)
 
