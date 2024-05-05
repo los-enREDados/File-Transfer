@@ -311,11 +311,12 @@ class SocketRDT:
             seqNumRecibido = paquete.getSequenceNumber() #5
             
             # Agrego mi paquete al mensaje final
-            if ultimoSeqNumACK != seqNumRecibido:
+            if seqNumRecibido == ultimoSeqNumACK + 1:
+                print(f"Me llego bien el seqNum: {seqNumRecibido}")
                 payload = paquete.getPayload()
                 mensajeFinal.extend(payload)
 
-            ultimoSeqNumACK = seqNumRecibido
+                ultimoSeqNumACK = seqNumRecibido
 
 
             es_fin = paquete.fin
