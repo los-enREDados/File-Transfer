@@ -24,8 +24,10 @@ def download(path):
     print("mi puerto es ", serverSCK.myAddress[1])
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    serverSCK.connect()
-   
+    res = serverSCK.connect(lib.constants.DOWNLOAD, path)
+    if not res:
+        print("Connection Timed out")
+        return
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../data/server/"+path)
     
