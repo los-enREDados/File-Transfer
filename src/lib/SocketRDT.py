@@ -217,7 +217,7 @@ class SocketRDT:
         return
 
     def sendall(self, mensaje:bytes):
-        if self.tipo == "SW":
+        if self.protocolo == "SW":
             self._sendall_stop_and_wait(mensaje)
         else:
             self._sendall_selective(mensaje)
@@ -241,10 +241,10 @@ class SocketRDT:
         paquete = Paquete.Paquete_from_bytes(paquete_bytes)
         return paquete
 
-    def _pkt_sent_ok(self, ack_pkt: bytes, seqNum: int):
+    def _pkt_sent_ok(self, ack_pkt: int, seqNum: int):
         # Aclaracion: El ACK es directamente el numero de 
         # paquete recibido por el otro
-        seqNumRecibido = uint32Aint(ack_pkt)
+        seqNumRecibido = ack_pkt
 
         return seqNumRecibido == seqNum
 
@@ -268,9 +268,9 @@ class SocketRDT:
 
                 
                 if seqNum == cantPaquetesAenviar:
-                    paquete = Paquete(seqNum, lib.constants.FIN, payloadActual)
+                    paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, payloadActual)
                 else:
-                    paquete = Paquete(seqNum, lib.constants.NOFIN, payloadActual)
+                    paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
 
                 print(f"Enviando paquete a {self.peerAddr}")
                 print(f"seqNum: {seqNum}")
@@ -278,7 +278,9 @@ class SocketRDT:
 
                 # Recibimos el ACK de que el paquete llego
                 # Aca puede quedar bloqueado hasta que salte el timeout
-                ack_pkt = self._recieve(lib.constants.TAMANONUMERORED)
+                paquete_ack = self._recieve()
+
+                ack_pkt = paquete.getSequenceNumber()
                 
                 if self._pkt_sent_ok(ack_pkt, seqNum):
                     seqNum += 1
@@ -304,10 +306,8 @@ class SocketRDT:
         ultimoSeqNumACK = -1
         while not es_fin:
 
-            bytes_paquete = self._recieve(lib.constants.TAMANOPAQUETE + lib.constants.TAMANOHEADER)
+            paquete = self._recieve()
        
-            paquete = Paquete.Paquete_from_bytes(bytes_paquete)
-
             seqNumRecibido = paquete.getSequenceNumber() #5
             
             # Agrego mi paquete al mensaje final
@@ -322,7 +322,9 @@ class SocketRDT:
             
             # Envio ACK
             seqNumAEnviar = paquete.getSequenceNumber()
-            self.skt.sendto(intAUint32(seqNumAEnviar), self.peerAddr)
+            paqueteAck = Paquete(seqNumAEnviar, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, b"")
+
+            self.skt.sendto(paqueteAck.misBytes, self.peerAddr)
         
         return mensajeFinal
 
