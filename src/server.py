@@ -51,6 +51,7 @@ class Listener:
             # w.hablar()
 
         def handshake(self, addressCliente, myIP, paquete):
+            print(f"TIPO DE CONEXION {paquete.tipo}")
             socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIP)
             nuevoPuerto = socketRDT.skt.getsockname()[1]
             self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
@@ -90,7 +91,6 @@ def worker(socketRDT, paquete):
 
 
     elif tipo == lib.constants.DOWNLOAD:
-        socketRDT.sendall("ack".encode())
 
         try: 
             print(f"\033[93mEnviando '{nombre}' a {addressCliente}...\033[0m")

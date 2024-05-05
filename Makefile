@@ -24,6 +24,9 @@ matarColgados:
 upload:
 	$(INTERPRETER) src/upload.py $(ARCHIVO)
 
+download:
+	$(INTERPRETER) src/download.py $(ARCHIVO)
+
 server:
 	$(INTERPRETER) src/server.py
 

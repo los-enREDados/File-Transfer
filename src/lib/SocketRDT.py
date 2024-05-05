@@ -357,6 +357,8 @@ class SocketRDT:
         while not es_fin:
 
             paquete = self._recieve()
+            if paquete == None:
+                continue
        
             seqNumRecibido = paquete.getSequenceNumber() #5
             

@@ -40,25 +40,6 @@ def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
     return 
 
 def recibirArchivo(serverSCK: SocketRDT, pathDelArchivoADescargar: str):
-    # Protocolo de descarga de archivos:
-    # 1. Cliente envia "download path/del/archivo"
-    # 2. Servidor responde con "ack"
-    # 3. Cliente recibe el archivo
-
-    # serverSCK.sendall((f"download {archivoNombre}").encode())
-    # ack = serverSCK.receive_all()
-    # if ack != "ack":
-    #     print("Error en la conexión")
-    #     return
-
-    mensaje = lib.constants.MENSAJEDOWNLOAD + strABytes(pathDelArchivoADescargar)
-    serverSCK.sendall(mensaje)
-
-    ack = serverSCK.receive_all()
-    if ack.decode("utf-8") != "ack":
-        print("Error en la conexión AAAA")
-
-
     downloaded_file = serverSCK.receive_all()
    
     return downloaded_file
