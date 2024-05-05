@@ -25,7 +25,7 @@ from sys import argv
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
-SERVER_PATH = "../data/server/"
+# SERVER_PATH = "../data/server/"
 
 
 
@@ -68,10 +68,10 @@ class Listener:
             nuevoPuerto = socketRDT.skt.getsockname()[1] 
             self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete) # Añadir modo (verbose, quiet)
 
-            worker(socketRDT, paquete) # Añadir modo (verbose, quiet)
+            worker(socketRDT, paquete, self.flags.stge) # Añadir modo (verbose, quiet)
 
 
-def worker(socketRDT, paquete, mod = Mode.NORMAL):
+def worker(socketRDT, paquete, stge, mode = Mode.NORMAL):
     # socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
     # socketRDT.syncAck()
     # addressCliente = socketRDT.skt.getpeername() 
@@ -98,7 +98,7 @@ def worker(socketRDT, paquete, mod = Mode.NORMAL):
         print("\033[92mArchivo Recibido!\033[0m")
 
 
-        with open(SERVER_PATH + nombreArchivo, "wb") as file:
+        with open(stge + nombreArchivo, "wb") as file:
             file.write(archivo_recibido) # Añadir modo (verbose, quiet)
 
 
@@ -106,9 +106,9 @@ def worker(socketRDT, paquete, mod = Mode.NORMAL):
         socketRDT.sendall("ack".encode()) # Añadir modo (verbose, quiet)
 
         try: 
-            print(f"\033[93mEnviando '{nombre}' a {addressCliente}...\033[0m")
+            print(f"\033[93mEnviando '{stge + nombre}' a {addressCliente}...\033[0m")
             
-            with open(nombre, "rb") as file:
+            with open(stge + nombre, "rb") as file:
                 archivo = file.read()
             
                 socketRDT.sendall(archivo) # Añadir modo (verbose, quiet)

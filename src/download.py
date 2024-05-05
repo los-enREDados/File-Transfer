@@ -3,6 +3,7 @@ from lib.SocketRDT import SocketRDT
 import lib.ProtocoloFS
 from sys import argv
 from lib.constants import Mode, ClientFlags
+import lib.constants
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 MESSAGE = b"Hello, World!"
@@ -14,12 +15,12 @@ class downloader_flags:
     dst: str
     name: str
 
-def download(path):
-    print("UDP target IP: %s" % UDP_IP)
-    print("UDP target port: %s" % UDP_PORT)
+def download(flags: downloader_flags):
+    print("UDP target IP: %s" % flags.host)
+    print("UDP target port: %s" % flags.port)
 
 
-    peerAddres = (UDP_IP, UDP_PORT)
+    peerAddres = (flags.host, flags.port)
 
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
@@ -30,14 +31,14 @@ def download(path):
     print("mi puerto es ", serverSCK.myAddress[1])
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    serverSCK.connect()
+    serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
    
 
-    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../data/server/"+path)
+    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
     
     print("\033[92mArchivo Recibido!\033[0m")
 
-    with open("../data/cliente/" + path, "wb") as file:
+    with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)
 
 
@@ -85,7 +86,6 @@ def main():
         elif argv[i] == ClientFlags.NAME.value:
             flags.name = argv[i+1]
             i += 2
-
-    # download(argv[1])
+    download(flags)
 main()
 
