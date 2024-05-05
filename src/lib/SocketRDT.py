@@ -251,10 +251,17 @@ class SocketRDT:
     def _recieve(self, tam=lib.constants.TAMANOPAQUETE + 16) -> Paquete:
         paquete_bytes, addr = self.skt.recvfrom(tam)
         
-        if addr != self.peerAddr:
-            print("Recibi un paquete de otro lado")
-            return None
         paquete = Paquete.Paquete_from_bytes(paquete_bytes)
+
+        # print("Recibi un paquete de otro lado")
+        # print(f"Addr de lo que me llego: {addr}")
+        # print(f"Addr de mi peer: {self.peerAddr}")
+        # print(f"Payload {paquete.getPayload()}")
+        if addr != self.peerAddr:
+            print("ME llego algo de una direccion incorrecta")
+            # sys.exit("FORRO FORRO")
+            return None
+
         return paquete
 
     def _pkt_sent_ok(self, ack_pkt: int, seqNum: int):
@@ -273,7 +280,7 @@ class SocketRDT:
         print(f"cantPaquetesAenviar: {cantPaquetesAenviar}")
 
         seqNum = 0
-        while seqNum <= cantPaquetesAenviar:
+        while seqNum < cantPaquetesAenviar:
            
             try: 
 
@@ -283,10 +290,11 @@ class SocketRDT:
                 payloadActual = mensaje[indiceInicial:indiceFinal]
 
                 
-                if seqNum == cantPaquetesAenviar:
-                    paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, payloadActual)
-                else:
-                    paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
+                # if seqNum == cantPaquetesAenviar:
+                #     paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, payloadActual)
+                # else:
+                #     paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
+                paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
 
                 print(f"Enviando paquete a {self.peerAddr}")
                 print(f"seqNum: {seqNum}")
@@ -295,6 +303,8 @@ class SocketRDT:
                 # Recibimos el ACK de que el paquete llego
                 # Aca puede quedar bloqueado hasta que salte el timeout
                 paquete_ack = self._recieve()
+                if paquete_ack == None:
+                    continue
 
                 ack_pkt = paquete_ack.getSequenceNumber()
                 
@@ -308,13 +318,38 @@ class SocketRDT:
                 # Volver a ejecutar
                 print("TIMEOUT")
                 pass
+
+        maxTimeouts = 4
+        timeoutCount = 0
+        llegoFin = False
+        while llegoFin == False:
+            try:
+                paquete = Paquete(seqNum + 1, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, b"")
+
+                self.skt.sendto(paquete.misBytes, self.peerAddr)
+
+                ack_pkt = self._recieve()
+                if not ack_pkt:
+                    continue
+
+                seqNumRecibido = ack_pkt.getSequenceNumber()
+
+                if seqNumRecibido == seqNum + 1:
+                    break
+            except TimeoutError:
+                timeoutCount += 1
+                if timeoutCount > maxTimeouts:
+                    break
+                print("TIMEOUT DEL FIN")
+                pass
+
             
         self.skt.settimeout(None)
     
         return
     
 
-    def _receive_stop_and_wait(self,):
+    def _receive_stop_and_wait(self):
         mensajeFinal = bytearray()
 
         es_fin = False
