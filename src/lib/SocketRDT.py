@@ -232,7 +232,7 @@ class SocketRDT:
     def shutdown(self, ):
         sys.exit("NO IMPLEMENTADO")
 
-    def _recieve(self, tam=lib.constants.TAMANOPAQUETE + 16) -> bytes:
+    def _recieve(self, tam=lib.constants.TAMANOPAQUETE + 16) -> Paquete:
         paquete_bytes, addr = self.skt.recvfrom(tam)
         
         if addr != self.peerAddr:
