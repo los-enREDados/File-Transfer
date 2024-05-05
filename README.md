@@ -26,7 +26,7 @@ make stopAndWait
 ### Introducir perdida artificial de paquetes
 WARNING: Posiblemente necesita permisos de root
 ```terminal
-make PERDIDA=<nombreArchivo> crearPerdida
+make ARCHIVO=<nombreArchivo> crearPerdida
 ```
 ### Sacar perdida de paquetes
 WARNING: Posiblemente necesita permisos de root
