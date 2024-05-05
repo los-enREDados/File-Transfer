@@ -6,18 +6,26 @@ import os
 import lib.SocketRDT 
 print(os.getcwd())
 
+class server_state_flags:
+    mode: lib.constants.Mode
+    host: str
+    port: int
+    stge: str
+    name: str
 
 #    DIR.archivo
 from lib.SocketRDT import SocketRDT, bytesAstr, uint32Aint
 import lib.ProtocoloFS
 import lib.constants
+from lib.constants import ServerFlags, Mode
 import threading
+from sys import argv
 
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
-SERVER_PATH = "data/server/"
+SERVER_PATH = "../data/server/"
 
 
 
@@ -35,30 +43,35 @@ def input_server():
         print("Cerrando servidor...")
 
 class Listener:
-        def __init__ (self, ip, port):
+        recieveSocket : SocketRDT
+        flags : server_state_flags
+
+        def __init__ (self, flags):
+            self.flags = flags
             self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO, None,
-                                        (0,0), ip, port)
+                                        (0,0), flags.host, flags.port)
 
         def listen(self):
             # TODO: Poner en un loop y hacer que esto sea multithread
             # Cada worker deberia estar en su propio thread
-            paquete, addr  = self.recieveSocket.acceptConnection()
+            paquete, addr  = self.recieveSocket.acceptConnection() # Añadir modo (verbose, quiet)
 
+            self.handshake(addr, paquete) # Añadir modo (verbose, quiet)
 
-            self.handshake(addr, UDP_IP, paquete)
+            # self.handshake(addr, UDP_IP, paquete)
             # worker(addr, UDP_IP)
             # w = Worker(addr, UDP_IP)
             # w.hablar()
 
-        def handshake(self, addressCliente, myIP, paquete):
-            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIP)
-            nuevoPuerto = socketRDT.skt.getsockname()[1]
-            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
+        def handshake(self, addressCliente, paquete):
+            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, self.flags.host)
+            nuevoPuerto = socketRDT.skt.getsockname()[1] 
+            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete) # Añadir modo (verbose, quiet)
 
-            worker(socketRDT, paquete)
+            worker(socketRDT, paquete) # Añadir modo (verbose, quiet)
 
 
-def worker(socketRDT, paquete):
+def worker(socketRDT, paquete, mod = Mode.NORMAL):
     # socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
     # socketRDT.syncAck()
     # addressCliente = socketRDT.skt.getpeername() 
@@ -80,17 +93,17 @@ def worker(socketRDT, paquete):
         #archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
         
         # print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
-        archivo_recibido = socketRDT.receive_all()
+        archivo_recibido = socketRDT.receive_all() # Añadir modo (verbose, quiet)
     
         print("\033[92mArchivo Recibido!\033[0m")
 
 
         with open(SERVER_PATH + nombreArchivo, "wb") as file:
-            file.write(archivo_recibido)
+            file.write(archivo_recibido) # Añadir modo (verbose, quiet)
 
 
     elif tipo == lib.constants.DOWNLOAD:
-        socketRDT.sendall("ack".encode())
+        socketRDT.sendall("ack".encode()) # Añadir modo (verbose, quiet)
 
         try: 
             print(f"\033[93mEnviando '{nombre}' a {addressCliente}...\033[0m")
@@ -98,7 +111,7 @@ def worker(socketRDT, paquete):
             with open(nombre, "rb") as file:
                 archivo = file.read()
             
-                socketRDT.sendall(archivo)
+                socketRDT.sendall(archivo) # Añadir modo (verbose, quiet)
                 
         except FileNotFoundError:
             print(f"El archivo {nombre} no existe")
@@ -136,11 +149,48 @@ def worker(socketRDT, paquete):
 
 
 def __main__():
+
+    flags = server_state_flags()
+    i = 1
+    while i < len(argv):
+        if argv[i] == ServerFlags.HELP.value:
+            print(
+                "usage : start - server [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s DIRPATH ]\n\n"
+                "< command description >\n\n"
+                "optional arguments :\n"
+                "-h , -- help show this help message and exit\n"
+                "-v , -- verbose increase output verbosity\n"
+                "-q , -- quiet decrease output verbosity\n"
+                "-H , -- host service IP address\n"
+                "-p , -- port service port\n"
+                "-s , -- storage storage dir path\n"
+                )
+            return
+        elif argv[i] == ServerFlags.VERBOSE.value:
+            flags.mode = Mode.VERBOSE
+            i += 1
+
+        elif argv[i] == ServerFlags.QUIET.value:
+            flags.mode = Mode.QUIET
+            i += 1
+
+        elif argv[i] == ServerFlags.HOST.value:
+            flags.host = argv[i+1]
+            i += 2
+
+        elif argv[i] == ServerFlags.PORT.value:
+            flags.port = int(argv[i+1])
+            i += 2
+
+        elif argv[i] == ServerFlags.STORAGE.value:
+            flags.stge = argv[i+1]
+            i += 2
+
     if lib.constants.TIPODEPROTOCOLO != "SW" and lib.constants.TIPODEPROTOCOLO != "SR":
         sys.exit(f'''
 \033[91mERROR\033[0m: Tipo de protocolo desconocido: {lib.constants.TIPODEPROTOCOLO}''')
 
-    l = Listener(UDP_IP, UDP_PORT)
+    l = Listener(flags)
     l.listen()
 
 __main__()

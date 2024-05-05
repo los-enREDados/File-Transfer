@@ -74,3 +74,11 @@ class ClientFlags(Enum):
     SRC = "-s"
     NAME = "-n"
     DST = "-d"
+
+class ServerFlags(Enum):
+    VERBOSE = "-v"
+    QUIET = "-q"
+    HELP = "-h"
+    HOST = "-H"
+    PORT = "-p"
+    STORAGE = "-s"
