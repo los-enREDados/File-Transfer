@@ -248,7 +248,7 @@ class SocketRDT:
     def shutdown(self, ):
         sys.exit("NO IMPLEMENTADO")
 
-    def _recieve(self, tam=lib.constants.TAMANOPAQUETE + 16) -> Paquete:
+    def _recieve(self, tam=lib.constants.TAMANOPAQUETE) -> Paquete:
         paquete_bytes, addr = self.skt.recvfrom(tam)
         
         paquete = Paquete.Paquete_from_bytes(paquete_bytes)
@@ -284,8 +284,8 @@ class SocketRDT:
            
             try: 
 
-                indiceInicial = seqNum * lib.constants.TAMANOPAQUETE
-                indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
+                indiceInicial = seqNum * lib.constants.TAMANOPAYLOAD
+                indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAYLOAD #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
 
                 payloadActual = mensaje[indiceInicial:indiceFinal]
 
@@ -444,8 +444,8 @@ class SocketRDT:
 
         # NOTE: Si llegue hasta significa que hay espacio en la ventana
 
-        indiceInicial = seqNum * lib.constants.TAMANOPAQUETE
-        indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAQUETE #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
+        indiceInicial = seqNum * lib.constants.TAMANOPAYLOAD
+        indiceFinal = (seqNum + 1) * lib.constants.TAMANOPAYLOAD #ATTENTION: Ese es no inclusivo, va hasta indice final - 1
         payloadActual = mensaje[indiceInicial:indiceFinal]
         # print( f"mensaje inicial: {indiceInicial} mensaje final: {indiceFinal} payload: {payloadActual}")
 
