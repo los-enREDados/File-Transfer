@@ -27,6 +27,9 @@ upload:
 server:
 	$(INTERPRETER) src/server.py
 
+limpiarDirsRecibimiento:
+	rm data/cliente/* || true
+	rm data/server/* || true
 
 crearPerdida:
 	tc qdisc add dev $(LOOPBACK) root netem delay 0 loss $(PERDIDA)
