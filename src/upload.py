@@ -14,18 +14,18 @@ def upload(path):
     print("UDP target port: %s" % UDP_PORT)
 
 
+
     peerAddres = (UDP_IP, UDP_PORT)
 
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.2")
+    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, "127.0.0.2")
 
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    serverSCK.connect()
+    serverSCK.connect(lib.constants.UPLOAD, path)
 
-    
     lib.ProtocoloFS.mandarArchivo(serverSCK, path)
 
 

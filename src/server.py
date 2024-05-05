@@ -1,7 +1,9 @@
 import sys
 import socket
 # import struct
-import os 
+import os
+
+import lib.SocketRDT 
 print(os.getcwd())
 
 
@@ -15,7 +17,7 @@ import threading
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
-SERVER_PATH = "../data/server/"
+SERVER_PATH = "data/server/"
 
 
 
@@ -34,40 +36,50 @@ def input_server():
 
 class Listener:
         def __init__ (self, ip, port):
-            self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
+            self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO, None,
                                         (0,0), ip, port)
 
         def listen(self):
             # TODO: Poner en un loop y hacer que esto sea multithread
             # Cada worker deberia estar en su propio thread
-            addr  = self.recieveSocket.acceptConnection()
+            paquete, addr  = self.recieveSocket.acceptConnection()
 
-            worker(addr, UDP_IP)
+
+            self.handshake(addr, UDP_IP, paquete)
+            # worker(addr, UDP_IP)
             # w = Worker(addr, UDP_IP)
             # w.hablar()
 
+        def handshake(self, addressCliente, myIP, paquete):
+            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIP)
+            nuevoPuerto = socketRDT.skt.getsockname()[1]
+            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
 
-def worker(addressCliente, myIP):
-    socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
-    socketRDT.syncAck()
+            worker(socketRDT, paquete)
 
-    tipoYnombre = socketRDT.receive_all()
-    tipo = tipoYnombre[0:len(lib.constants.MENSAJEUPLOAD)]
+
+def worker(socketRDT, paquete):
+    # socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
+    # socketRDT.syncAck()
+    # addressCliente = socketRDT.skt.getpeername() 
+    addressCliente = socketRDT.peerAddr
+    nombre = bytesAstr(paquete.getPayload())
+    tipo = paquete.tipo
     # Con esto vemos si es upload (UPL) o Download (DOW)
     # Por ahora que solo estamos implementando upload no lo usamos
     
-    pathArchivo = tipoYnombre[len(lib.constants.MENSAJEUPLOAD):]
-    pathArchivo = bytesAstr(pathArchivo)
+    # pathArchivo = nombre[len(lib.constants.MENSAJEUPLOAD):]
+    # pathArchivo = bytesAstr(pathArchivo)
 
-    if tipo == lib.constants.MENSAJEUPLOAD:
+    if tipo == lib.constants.UPLOAD:
 
-        nombreArchivo = pathArchivo.split("/")[-1]
+        nombreArchivo = nombre.split("/")[-1]
     
         # TODO: No me capta el tipo correctamente. Arreglar
         # if tipo == lib.constants.MENSAJEUPLOAD:
         #archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
         
-        print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
+        # print(f"\033[93mRecibiendo '{nombreArchivo}' de {addressCliente}...\033[0m")
         archivo_recibido = socketRDT.receive_all()
     
         print("\033[92mArchivo Recibido!\033[0m")
@@ -77,19 +89,19 @@ def worker(addressCliente, myIP):
             file.write(archivo_recibido)
 
 
-    elif tipo == lib.constants.MENSAJEDOWNLOAD:
+    elif tipo == lib.constants.DOWNLOAD:
         socketRDT.sendall("ack".encode())
 
         try: 
-            print(f"\033[93mEnviando '{pathArchivo}' a {addressCliente}...\033[0m")
+            print(f"\033[93mEnviando '{nombre}' a {addressCliente}...\033[0m")
             
-            with open(pathArchivo, "rb") as file:
+            with open(nombre, "rb") as file:
                 archivo = file.read()
             
                 socketRDT.sendall(archivo)
                 
         except FileNotFoundError:
-            print(f"El archivo {pathArchivo} no existe")
+            print(f"El archivo {nombre} no existe")
             
 
 

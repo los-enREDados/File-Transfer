@@ -18,11 +18,11 @@ def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
     # 4. Servidor responde con la cantidad de bytes leidos
 
 
-    nombreArchivo = strABytes(archivoNombre)
-    mensaje = lib.constants.MENSAJEUPLOAD + nombreArchivo
+    # nombreArchivo = strABytes(archivoNombre)
+    # mensaje = lib.constants.MENSAJEUPLOAD + nombreArchivo
 
     
-    serverSCK.sendall(mensaje)
+    # serverSCK.sendall(mensaje)
   
     # ack = serverSCK.receive_all()
     # if ack != "ack":
@@ -31,7 +31,6 @@ def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
     
     with open(archivoNombre, "rb") as file:
         archivo = file.read()
-        # print color red
         serverSCK.sendall(archivo)
 
     # bytes_read = serverSCK.receive_all()
