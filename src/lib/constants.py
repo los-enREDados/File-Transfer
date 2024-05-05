@@ -1,7 +1,7 @@
 IPTUPLA = 0
 PUERTOTUPLA = 1
 
-TIPODEPROTOCOLO = "SW" 
+TIPODEPROTOCOLO = "SR" 
 
 # Estos dos estan en bytes
 

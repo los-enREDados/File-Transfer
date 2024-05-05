@@ -615,6 +615,8 @@ class SocketRDT:
                     break
 
                 paquete = self._recieve()
+                if paquete == None:
+                    continue
 
                 if (paquete.tipo != self.tipo or  paquete.connect != lib.constants.NOCONNECT or paquete.error != lib.constants.NOERROR):
                     print("ERROR: Recibi un paquete que no esperaba")
