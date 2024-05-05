@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 IPTUPLA = 0
 PUERTOTUPLA = 1
 
@@ -56,3 +59,17 @@ MENSAJEACEPTARCONECCION= b"SYNACK"
 
 # Para sacar el packet loss
 # sudo tc qdisc del dev <interface_name> root
+
+class Mode(Enum):
+    NORMAL = 0
+    VERBOSE = 1
+    QUIET = 2
+
+class Flag(Enum):
+    VERBOSE = "-v"
+    QUIET = "-q"
+    HELP = "-h"
+    HOST = "-H"
+    PORT = "-p"
+    SRC = "-s"
+    NAME = "-n"
