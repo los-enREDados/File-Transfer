@@ -9,11 +9,10 @@ MESSAGE = b"Hello, World!"
 
 
 def download(path):
-    print("UDP target IP: %s" % UDP_IP)
-    print("UDP target port: %s" % UDP_PORT)
-
+    print(path)
 
     peerAddres = (UDP_IP, UDP_PORT)
+
 
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
@@ -29,11 +28,11 @@ def download(path):
         print("Connection Timed out")
         return
 
-    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, "../data/server/"+path)
+    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, path)
     
-    print("\033[92mArchivo Recibido!\033[0m")
+    nombre = path.split("/")[-1]
 
-    with open("../data/cliente/" + path, "wb") as file:
+    with open("data/cliente/" + nombre, "wb") as file:
         file.write(archivo)
 
 
