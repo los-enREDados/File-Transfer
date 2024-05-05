@@ -452,6 +452,7 @@ class SocketRDT:
         # print( f"mensaje inicial: {indiceInicial} mensaje final: {indiceFinal} payload: {payloadActual}")
 
         paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
+        print(f" Seq number :{seqNum}, tiene payload {paquete.getPayload()}")
 
         self.skt.sendto(paquete.misBytes, self.peerAddr)
 
@@ -511,7 +512,7 @@ class SocketRDT:
 
     def _sendall_selective(self, mensaje: bytes):
 
-        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
+        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
         tamanoVentana = math.ceil(cantPaquetesAenviar / 2)
@@ -532,6 +533,7 @@ class SocketRDT:
 
         self.skt.setblocking(False)
 
+        print(f"Cantidad de paquetes a enviar {cantPaquetesAenviar}")
         envieTodo = False
         while envieTodo == False:
             huboTimeout = False
@@ -564,12 +566,15 @@ class SocketRDT:
 
         self.skt.settimeout(lib.constants.TIMEOUTSENDERSR)
 
+        print("MANDO EL FIN MANDO EL FIN")
+        print(f"Cantidad de paquetes a enviar: {cantPaquetesAenviar}")
+        print(f"Paquete numactual: {seqNumActual}")
         maxTimeouts = 4
         timeoutCount = 0
         llegoFin = False
         while llegoFin == False:
             try:
-                paquete = Paquete(seqNumActual + 1, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, b"")
+                paquete = Paquete(cantPaquetesAenviar, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, b"")
 
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
@@ -611,12 +616,14 @@ class SocketRDT:
         self.skt.settimeout(lib.constants.TIMEOUTRECEIVER)
         while True:
             try:
-                if seq_num_de_fin != None and cant_recibidos == seq_num_de_fin+1:
+                if seq_num_de_fin != None and cant_recibidos == seq_num_de_fin + 1:
+                    print(f"Cantidad de recibidos: {cant_recibidos}")
                     break
 
                 paquete = self._recieve()
                 if paquete == None:
                     continue
+
 
                 if (paquete.tipo != self.tipo or  paquete.connect != lib.constants.NOCONNECT or paquete.error != lib.constants.NOERROR):
                     print("ERROR: Recibi un paquete que no esperaba")
@@ -624,17 +631,19 @@ class SocketRDT:
 
                 seqNumRecibido = paquete.getSequenceNumber()
 
-                print(f"|  Recibi seqNum: {seqNumRecibido}")
+                print(f" Seq number :{seqNumRecibido}, tiene payload {paquete.getPayload()}")
+
+                # print(f"|  Recibi seqNum: {seqNumRecibido}")
 
 
-                # paquete_ack = Paquete(seqNumRecibido, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, b"")
-                self.skt.sendto(paquete.misBytes, self.peerAddr)
+                paquete_ack = Paquete(seqNumRecibido, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, b"")
+                self.skt.sendto(paquete_ack.misBytes, self.peerAddr)
 
                 es_fin = paquete.fin
                 if es_fin == True and seqNumRecibido not in mensajeFinal:
                     print("LLEGO EL FIN")
                     seq_num_de_fin = seqNumRecibido
-                    break
+                    # break
 
                 if seqNumRecibido not in mensajeFinal:
                     mensajeFinal[seqNumRecibido] = paquete.payload
@@ -650,7 +659,7 @@ class SocketRDT:
 
         mensaje = bytearray()
         for i in range(cant_recibidos):
-            mensaje.extend( mensajeFinal[i])
+            mensaje.extend(mensajeFinal[i])
          
         return mensaje 
         sys.exit("NO IMPLEMENTADO")
