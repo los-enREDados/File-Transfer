@@ -18,7 +18,7 @@ def download(path):
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, peerAddres, "127.0.0.2")
+    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, "127.0.0.2")
 
 
     print("mi puerto es ", serverSCK.myAddress[1])

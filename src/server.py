@@ -36,7 +36,7 @@ def input_server():
 
 class Listener:
         def __init__ (self, ip, port):
-            self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO,
+            self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO, None,
                                         (0,0), ip, port)
 
         def listen(self):
@@ -51,7 +51,7 @@ class Listener:
             # w.hablar()
 
         def handshake(self, addressCliente, myIP, paquete):
-            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
+            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIP)
             nuevoPuerto = socketRDT.skt.getsockname()[1]
             self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
 
@@ -62,6 +62,7 @@ def worker(socketRDT, paquete):
     # socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
     # socketRDT.syncAck()
     # addressCliente = socketRDT.skt.getpeername() 
+    addressCliente = socketRDT.peerAddr
     nombre = bytesAstr(paquete.getPayload())
     tipo = paquete.tipo
     # Con esto vemos si es upload (UPL) o Download (DOW)
@@ -92,15 +93,15 @@ def worker(socketRDT, paquete):
         socketRDT.sendall("ack".encode())
 
         try: 
-            print(f"\033[93mEnviando '{pathArchivo}' a {addressCliente}...\033[0m")
+            print(f"\033[93mEnviando '{nombre}' a {addressCliente}...\033[0m")
             
-            with open(pathArchivo, "rb") as file:
+            with open(nombre, "rb") as file:
                 archivo = file.read()
             
                 socketRDT.sendall(archivo)
                 
         except FileNotFoundError:
-            print(f"El archivo {pathArchivo} no existe")
+            print(f"El archivo {nombre} no existe")
             
 
 

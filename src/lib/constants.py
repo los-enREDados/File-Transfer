@@ -25,11 +25,12 @@ CONNECT = 1
 NOCONNECT = 0
 FIN = 1
 NOFIN = 0
-
+ERROR = 1
+NOERROR = 0
 
 TAMANOLECTURAARCHIVO = None
 
-TIMEOUTSENDER = 0.5
+TIMEOUTSENDER = 0.01
 
 # TODO: Bajar. Esto es muy grande; es solo para debugear
 TIMEOUTSENDERSR = 1
