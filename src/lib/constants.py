@@ -65,7 +65,7 @@ class Mode(Enum):
     VERBOSE = 1
     QUIET = 2
 
-class Flag(Enum):
+class ClientFlags(Enum):
     VERBOSE = "-v"
     QUIET = "-q"
     HELP = "-h"
@@ -73,3 +73,4 @@ class Flag(Enum):
     PORT = "-p"
     SRC = "-s"
     NAME = "-n"
+    DST = "-d"

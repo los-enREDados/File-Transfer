@@ -1,5 +1,5 @@
 from lib.SocketRDT import SocketRDT
-from lib.constants import Flag, Mode
+from lib.constants import ClientFlags, Mode
 import lib.ProtocoloFS
 from sys import argv
 
@@ -44,7 +44,7 @@ def main():
     flags.mode = Mode.NORMAL
     i = 1
     while i < len(argv):
-        if argv[i] == Flag.HELP.value:
+        if argv[i] == ClientFlags.HELP.value:
             print("usage : upload [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s FILEPATH ] [ - n FILENAME ]\n\n" + 
                 "< command description > \n\n" +
                 "optional arguments : \n"
@@ -57,27 +57,27 @@ def main():
                 "-n , -- name file name\n"
                 )
             return
-        elif argv[i] == Flag.VERBOSE.value:
+        elif argv[i] == ClientFlags.VERBOSE.value:
             flags.mode = Mode.VERBOSE
             i += 1
 
-        elif argv[i] == Flag.QUIET.value:
+        elif argv[i] == ClientFlags.QUIET.value:
             flags.mode = Mode.QUIET
             i += 1
 
-        elif argv[i] == Flag.HOST.value:
+        elif argv[i] == ClientFlags.HOST.value:
             flags.host = argv[i+1]
             i += 2
 
-        elif argv[i] == Flag.PORT.value:
+        elif argv[i] == ClientFlags.PORT.value:
             flags.port = int(argv[i+1])
             i += 2
 
-        elif argv[i] == Flag.SRC.value:
+        elif argv[i] == ClientFlags.SRC.value:
             flags.src = argv[i+1]
             i += 2
 
-        elif argv[i] == Flag.NAME.value:
+        elif argv[i] == ClientFlags.NAME.value:
             flags.name = argv[i+1]
             i += 2
 
