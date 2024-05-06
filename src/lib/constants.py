@@ -71,6 +71,7 @@ class ClientFlags(Enum):
     HELP = "-h"
     HOST = "-H"
     PORT = "-p"
+    MYIP = "-m"
     SRC = "-s"
     NAME = "-n"
     DST = "-d"

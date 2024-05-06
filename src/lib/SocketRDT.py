@@ -112,6 +112,7 @@ class SocketRDT:
         # nuevo cada vez. Fuente: https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
         # ATTENTION: Necesitamos bindearlo siempre porque tanto cliente
         # como servidor van a enviar y recibir cosas.
+        # print(f"Bindiando en {myIP} y {myPort}")
         self.skt.bind((myIP, myPort))
         print(self.skt.getsockname())
 

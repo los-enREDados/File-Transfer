@@ -22,7 +22,7 @@ import threading
 from sys import argv
 
 
-UDP_IP = "127.0.0.1"
+UDP_IP = "10.0.0.1"
 UDP_PORT = 5005
 
 # SERVER_PATH = "../data/server/"
@@ -77,6 +77,7 @@ def worker(socketRDT, paquete, stge, mode = Mode.NORMAL):
     # addressCliente = socketRDT.skt.getpeername() 
     addressCliente = socketRDT.peerAddr
     nombre = bytesAstr(paquete.getPayload())
+    print(nombre)
     tipo = paquete.tipo
     # Con esto vemos si es upload (UPL) o Download (DOW)
     # Por ahora que solo estamos implementando upload no lo usamos
@@ -97,7 +98,8 @@ def worker(socketRDT, paquete, stge, mode = Mode.NORMAL):
     
         print("\033[92mArchivo Recibido!\033[0m")
 
-
+        print(stge)
+        print(nombreArchivo)
         with open(stge + nombreArchivo, "wb") as file:
             file.write(archivo_recibido) # Añadir modo (verbose, quiet)
 

@@ -4,7 +4,7 @@ import lib.ProtocoloFS
 from sys import argv
 from lib.constants import Mode, ClientFlags
 import lib.constants
-UDP_IP = "127.0.0.1"
+UDP_IP = "10.0.0.4"
 UDP_PORT = 5005
 MESSAGE = b"Hello, World!"
 
@@ -25,7 +25,7 @@ def download(flags: downloader_flags):
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, "127.0.0.2")
+    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, "10.0.0.4")
 
 
     print("mi puerto es ", serverSCK.myAddress[1])
