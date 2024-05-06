@@ -18,9 +18,9 @@ class uploader_flags:
 
     def __init__(self):
         self.mode = Mode.NORMAL
-        self.host = constants.DEFAULT_SERVER_IP
-        self.port = constants.DEFAULT_SERVER_PORT
-        self.myIp = constants.DEFAULT_CLIENT_IP
+        self.host = lib.constants.DEFAULT_SERVER_IP
+        self.port = lib.constants.DEFAULT_SERVER_PORT
+        self.myIp = lib.constants.DEFAULT_CLIENT_IP
         
 
 def upload(flags):
@@ -29,13 +29,13 @@ def upload(flags):
     
     peerAddres = (flags.host, flags.port)
 
-    ownIp = constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
+    ownIp = lib.constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
     # Esto es para que si la ip no se puede asignar, se reintente con localhost
     try:
         serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
     except OSError as e:
-        print(f"Error al crear el socket. Reasignando Ip al cliente: {constants.DEFAULT_CLIENT_IP}")
-        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, constants.DEFAULT_CLIENT_IP)
+        print(f"Error al crear el socket. Reasignando Ip al cliente: {lib.constants.DEFAULT_CLIENT_IP}")
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, lib.constants.DEFAULT_CLIENT_IP)
         
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
@@ -110,6 +110,3 @@ if __name__ == "__main__":
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time:.2f} seconds")
-
-main()
-

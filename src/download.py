@@ -4,9 +4,6 @@ import lib.ProtocoloFS
 from sys import argv
 from lib.constants import Mode, ClientFlags
 import lib.constants
-UDP_IP = "10.0.0.4"
-UDP_PORT = 5005
-MESSAGE = b"Hello, World!"
 
 class downloader_flags:
     mode: lib.constants.Mode

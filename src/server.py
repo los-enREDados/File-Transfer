@@ -29,9 +29,6 @@ import threading
 from sys import argv
 
 
-UDP_IP = "10.0.0.1"
-UDP_PORT = 5555
-
 # SERVER_PATH = "../data/server/"
 
 class State:
@@ -90,7 +87,7 @@ class Server:
         def start(self):
             self.listener = threading.Thread(target=self.listen, args=(self.seguir_corriendo,))
 
-            print(f"Hola soy el Servidor y estoy en {UDP_IP}:{UDP_PORT}")
+            print(f"Hola soy el Servidor y estoy en {self.recieveSocket.myAddress[0]}:{self.recieveSocket.myAddress[1]}")
             self.listener.start()
             while self.seguir_corriendo.estado:
                 input_server = input("Presione q para cerrar el servidor \n")
@@ -135,7 +132,7 @@ class Server:
 
                     print(f"Recibi un paquete de {addr}")
                     print(f"Hago el handshake con {addr}")
-                    self.handshake(addr, UDP_IP, paquete)
+                    self.handshake(addr, self.recieveSocket.myAddress[0], paquete)
                     print(f"Termine el handshake con {addr}")
   
                 except ConnectionAttemptTimedOutError as e:
@@ -154,6 +151,7 @@ class Server:
             except ConnectionTimedOutError:
                 pass #Solo ignoro el error ya que se asume conexion
 
+            # NOTE: Aca arranca el nuevo thread
             print(f"[Nuevo cliente: {addressCliente}]")
             w = worker(socketRDT, paquete)
             w.run()
@@ -204,6 +202,9 @@ def work(socketRDT, paquete, state):
             
     
         print("\033[92mArchivo Recibido!\033[0m")
+
+        # WARNING: ESTO ES MOMENTANEO
+        stge = "data/server"
 
         print(stge)
         print(nombreArchivo)
@@ -277,7 +278,7 @@ def __main__():
         sys.exit(f'''
 \033[91mERROR\033[0m: Tipo de protocolo desconocido: {lib.constants.TIPODEPROTOCOLO}''')
     # o sacar ip y puerto de aca, o hacer que server reciba flags
-    server = Server(UDP_IP, UDP_PORT)
+    server = Server(lib.constants.DEFAULT_SERVER_IP, lib.constants.DEFAULT_SERVER_PORT)
     server.start()
 
 __main__()

@@ -120,6 +120,9 @@ class SocketRDT:
 
         # print(f"Bindiando en {myIP} y {myPort}")
         try:
+            print("TIPOS TIPOS")
+            print(type(myIP))
+            print(type(myPort))
             self.skt.bind((myIP, myPort))
             print(self.skt.getsockname())
         except OSError:
