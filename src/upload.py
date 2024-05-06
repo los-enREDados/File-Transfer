@@ -1,54 +1,112 @@
 from lib.SocketRDT import SocketRDT
+from lib.constants import ClientFlags, Mode
+import lib.ProtocoloFS
+from sys import argv
 from lib.SocketRDT import ConnectionTimedOutError
 import lib.constants
-import lib.ProtocoloFS
 from sys import argv
 import time
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
-MESSAGE = b"Hello, World!"
 
+class uploader_flags:
+    mode: Mode
+    host: str
+    port: int
+    myIp: str
+    src: str
+    name: str
 
-
-def upload(path):
-
-    print("UDP target IP: %s" % UDP_IP)
-    print("UDP target port: %s" % UDP_PORT)
-
-
-
-    peerAddres = (UDP_IP, UDP_PORT)
-
-    # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
-    # eso aplique para todos los casos. Esto me hace pensar que ni
-    # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, "127.0.0.2")
-
-    print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
-
-    try:
-        serverSCK.connect(lib.constants.UPLOAD, path)
-    except ConnectionTimedOutError as e:
-        print(e)
+    def __init__(self):
+        self.mode = Mode.NORMAL
+        self.host = lib.constants.DEFAULT_SERVER_IP
+        self.port = lib.constants.DEFAULT_SERVER_PORT
+        self.myIp = lib.constants.DEFAULT_CLIENT_IP
         
 
-    # res = serverSCK.connect(lib.constants.UPLOAD, path)
-    # if res == False:
-    #     print("Connection Timed out")
-    #     return
+def upload(flags):
+    print(f"Soy {flags.myIp}")
+    print(f"Quiero conectarme con : {flags.host}:{flags.port}")
+    
+    peerAddres = (flags.host, flags.port)
 
+    ownIp = lib.constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
+    # Esto es para que si la ip no se puede asignar, se reintente con localhost
+    try:
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
+    except OSError as e:
+        print(f"Error al crear el socket. Reasignando Ip al cliente: {lib.constants.DEFAULT_CLIENT_IP}")
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, lib.constants.DEFAULT_CLIENT_IP)
+        
+    print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
+
+
+    # FALTA IMPLEMENTAR:
+    #   *modos verbose y quiet
+    #   *flags.name
+    # Connect debería recibir los flags y laburar en base a eso
+    
+    try:
+       serverSCK.connect(lib.constants.UPLOAD, flags.name)
+    except ConnectionTimedOutError as e:
+       print(e)
+        
+    
+
+    lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+"/"+flags.name)
+
+
+def main():
+    flags = uploader_flags()
+    flags.mode = Mode.NORMAL
+    i = 1
+    while i < len(argv):
+        if argv[i] == ClientFlags.HELP.value:
+            print("usage : upload [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s FILEPATH ] [ - n FILENAME ]\n\n" + 
+                "< command description > \n\n" +
+                "optional arguments : \n"
+                "-h , -- help show this help message and exit \n"
+                "-v , -- verbose increase output verbosity \n"
+                "-q , -- quiet decrease output verbosity \n"
+                "-H , -- host server IP address \n"
+                "-p , -- port server port \n"
+                "-m , -- myIp my IP address (default 127.0.0.2) \n"
+                "-s , -- src source file path \n"
+                "-n , -- name file name\n"
+                )
+            return
+        elif argv[i] == ClientFlags.VERBOSE.value:
+            flags.mode = Mode.VERBOSE
+            i += 1
+            
+        elif argv[i] == ClientFlags.QUIET.value:
+            flags.mode = Mode.QUIET
+            i += 1
+
+        elif argv[i] == ClientFlags.HOST.value:
+            flags.host = argv[i+1]
+            i += 2
+
+        elif argv[i] == ClientFlags.PORT.value:
+            flags.port = int(argv[i+1])
+            i += 2
+
+        elif argv[i] == ClientFlags.MYIP.value:
+            flags.myIp = argv[i+1]
+            i += 2
+
+        elif argv[i] == ClientFlags.SRC.value:
+            flags.src = argv[i+1]
+            i += 2
+
+        elif argv[i] == ClientFlags.NAME.value:
+            flags.name = argv[i+1]
+            i += 2
+            
+    upload(flags)
+
+if __name__ == "__main__":
     start_time = time.time()
-
-    lib.ProtocoloFS.mandarArchivo(serverSCK, path)
-
-
+    main()
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time:.2f} seconds")
-
-def main():
-    # TODO: Hacer que ande con las flags
-    # por ahora lo hacemos asi para que ande
-    upload(argv[1])
-main()

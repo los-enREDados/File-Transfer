@@ -1,7 +1,17 @@
+from enum import Enum
+
+
 IPTUPLA = 0
 PUERTOTUPLA = 1
 
 TIPODEPROTOCOLO = "SW" 
+
+
+DEFAULT_SERVER_IP = "127.0.0.1"
+DEFAULT_SERVER_PORT = 5005
+
+DEFAULT_CLIENT_IP = "127.0.0.2"
+
 
 # Estos dos estan en bytes
 
@@ -50,7 +60,7 @@ MENSAJECONECCION = b"SYN"
 # ESTOS TIENEN QUE TENER EL MISMO TAMANO... bueno en realidad no.
 # pero hace las cosas ms faciles. 
 #MENSAJEUPLOAD = b"UPL"
-#MENSAJEDOWNLOAD = b"DOW"
+# MENSAJEDOWNLOAD = b"DOW"
 MENSAJEACK = b"ACK"
 MENSAJEACEPTARCONECCION= b"SYNACK"
 
@@ -63,3 +73,45 @@ MENSAJEACEPTARCONECCION= b"SYNACK"
 
 # Para sacar el packet loss
 # sudo tc qdisc del dev <interface_name> root
+
+class Mode(Enum):
+    NORMAL = 0
+    VERBOSE = 1
+    QUIET = 2
+
+class ClientFlags(Enum):
+    VERBOSE = "-v"
+    QUIET = "-q"
+    HELP = "-h"
+    HOST = "-H"
+    PORT = "-p"
+    MYIP = "-m"
+    SRC = "-s"
+    NAME = "-n"
+    DST = "-d"
+
+class ServerFlags(Enum):
+    VERBOSE = "-v"
+    QUIET = "-q"
+    HELP = "-h"
+    HOST = "-H"
+    PORT = "-p"
+    STORAGE = "-s"
+
+
+
+"""
+TODO
+correr sin nada y que ande con ips cosas default
+correr con flags y que se seteen bien
+
+ver como falla con mininet si no seteo nada y corre con default
+ver que ande en mininet si le seteo las ips
+
+
+SERVER:
+valores default
+    ip = 127.0.0.1
+    puerto = 5555
+
+"""
