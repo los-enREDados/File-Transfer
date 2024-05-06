@@ -20,7 +20,6 @@ flake8:
 # Si algun cliente de python quedo colgado, lo mato
 matarColgados:
 	killall -9 python3
-
 upload:
 	$(INTERPRETER) src/upload.py $(ARCHIVO)
 
@@ -40,5 +39,7 @@ crearPerdida:
 sacarPerdida:
 	tc qdisc del dev $(LOOPBACK) root
 
+installPlugin:
+	./installPlugin.sh
 
 .PHONY: server upload download

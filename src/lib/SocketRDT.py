@@ -118,6 +118,7 @@ class SocketRDT:
         # ATTENTION: Necesitamos bindearlo siempre porque tanto cliente
         # como servidor van a enviar y recibir cosas.
         self.skt.bind((myIP, myPort))
+
         print(self.skt.getsockname())
 
         # ATTENTION: No se si hace falta guardar "mi propio address"
