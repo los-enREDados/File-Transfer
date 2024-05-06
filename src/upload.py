@@ -1,7 +1,9 @@
-from lib.SocketRDT import SocketRDT, Tipo
+from lib.SocketRDT import SocketRDT
+from lib.SocketRDT import ConnectionTimedOutError
 import lib.constants
 import lib.ProtocoloFS
 from sys import argv
+import time
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
@@ -10,6 +12,7 @@ MESSAGE = b"Hello, World!"
 
 
 def upload(path):
+
     print("UDP target IP: %s" % UDP_IP)
     print("UDP target port: %s" % UDP_PORT)
 
@@ -24,13 +27,25 @@ def upload(path):
 
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    res = serverSCK.connect(lib.constants.UPLOAD, path)
-    if res == False:
-        print("Connection Timed out")
-        return
+    try:
+        serverSCK.connect(lib.constants.UPLOAD, path)
+    except ConnectionTimedOutError as e:
+        print(e)
+        
+
+    # res = serverSCK.connect(lib.constants.UPLOAD, path)
+    # if res == False:
+    #     print("Connection Timed out")
+    #     return
+
+    start_time = time.time()
 
     lib.ProtocoloFS.mandarArchivo(serverSCK, path)
 
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
 def main():
     # TODO: Hacer que ande con las flags

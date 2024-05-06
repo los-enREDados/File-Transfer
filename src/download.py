@@ -1,4 +1,6 @@
 from lib.SocketRDT import SocketRDT
+from lib.SocketRDT import ConnectionTimedOutError
+
 import lib.constants
 import lib.ProtocoloFS
 from sys import argv
@@ -23,9 +25,10 @@ def download(path):
     print("mi puerto es ", serverSCK.myAddress[1])
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    res = serverSCK.connect(lib.constants.DOWNLOAD, path)
-    if not res:
-        print("Connection Timed out")
+    try :
+        serverSCK.connect(lib.constants.DOWNLOAD, path)
+    except ConnectionTimedOutError as e:
+        print(e)
         return
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, path)
