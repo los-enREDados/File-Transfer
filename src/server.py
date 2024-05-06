@@ -187,15 +187,11 @@ def work(socketRDT, paquete, state):
     if tipo == lib.constants.UPLOAD:
 
         nombreArchivo = nombre.split("/")[-1]
+        print(f"Me esta llegando el archivo: {nombreArchivo}")
     
-        # TODO: No me capta el tipo correctamente. Arreglar
-        # if tipo == lib.constants.MENSAJEUPLOAD:
-        #archivo_recibido = lib.ProtocoloFS.recibirArchivo(socketRDT, pathArchivo)
-        
-
         try:
             archivo_recibido = socketRDT.receive_all()
-        except Exception as e:
+        except ConnectionTimedOutError as e:
             print(f"Murio la conexion con {addressCliente}")
             state.estado = False
             return
@@ -204,7 +200,7 @@ def work(socketRDT, paquete, state):
         print("\033[92mArchivo Recibido!\033[0m")
 
         # WARNING: ESTO ES MOMENTANEO
-        stge = "data/server"
+        stge = "data/server/"
 
         print(stge)
         print(nombreArchivo)
@@ -216,11 +212,10 @@ def work(socketRDT, paquete, state):
 
 
     elif tipo == lib.constants.DOWNLOAD:
-        socketRDT.sendall("ack".encode()) # Añadir modo (verbose, quiet)
-        # Si se rompe algo aca es pq esa linea no iba
-
+        stge = "data/server/"
+      
         try: 
-            print(f"\033[93mEnviando '{stge + nombre}' a {addressCliente}...\033[0m")
+            print(f"\033[93mEnviando {stge} + {nombre} a {addressCliente}...\033[0m")
             
             with open(stge + nombre, "rb") as file:
                 archivo = file.read()    

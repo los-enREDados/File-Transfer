@@ -8,17 +8,20 @@ import lib.constants
 class downloader_flags:
     mode: lib.constants.Mode
     host: str
-    port: str
+    port: int
+    myIp: str
     dst: str
     name: str
+    def __init__(self):
+        self.host = lib.constants.DEFAULT_SERVER_IP
+        self.port = lib.constants.DEFAULT_SERVER_PORT
+        self.myIp = lib.constants.DEFAULT_CLIENT_IP
+        self.dst  = "data/cliente/"
 
 
 def download(flags: downloader_flags):
     print("UDP target IP: %s" % flags.host)
     print("UDP target port: %s" % flags.port)
-
-
-    print(path)
 
 
     peerAddres = (flags.host, flags.port)
@@ -27,7 +30,8 @@ def download(flags: downloader_flags):
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
     # hace falta almacenar "myAddress". Para pensar
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, "10.0.0.4")
+
+    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.myIp)
 
 
     print("mi puerto es ", serverSCK.myAddress[1])
@@ -42,8 +46,10 @@ def download(flags: downloader_flags):
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
 
     
-    nombre = path.split("/")[-1]
+    # nombre = path.split("/")[-1]
 
+    print(flags.dst)
+    print(flags.name)
 
     with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)

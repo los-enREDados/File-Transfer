@@ -11,7 +11,7 @@ import time
 class uploader_flags:
     mode: Mode
     host: str
-    port: str
+    port: int
     myIp: str
     src: str
     name: str
