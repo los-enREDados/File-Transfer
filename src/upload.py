@@ -2,9 +2,7 @@ from lib.SocketRDT import SocketRDT
 from lib.constants import ClientFlags, Mode
 import lib.ProtocoloFS
 from sys import argv
-
-UDP_IP = "127.0.0.2"
-UDP_PORT = 5555
+from lib.constants import constants
 
 class uploader_flags:
     mode: Mode
@@ -16,9 +14,9 @@ class uploader_flags:
 
     def __init__(self):
         self.mode = Mode.NORMAL
-        self.host = "127.0.0.1"
-        self.port = 5555
-        self.myIp = "127.0.0.2"
+        self.host = constants.DEFAULT_SERVER_IP
+        self.port = constants.DEFAULT_SERVER_PORT
+        self.myIp = constants.DEFAULT_CLIENT_IP
         
 
 def upload(flags):
@@ -27,12 +25,12 @@ def upload(flags):
     
     peerAddres = (flags.host, flags.port)
 
-    ownIp = "127.0.0.2" if flags.myIp is None  else flags.myIp
+    ownIp = constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
     try:
         serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
     except OSError as e:
-        print("Error al crear el socket. Intentando con Ip 127.0.0.2")
-        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, "127.0.0.2")
+        print(f"Error al crear el socket. Reasignando Ip al cliente: {constants.DEFAULT_CLIENT_IP}")
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, constants.DEFAULT_CLIENT_IP)
         
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 

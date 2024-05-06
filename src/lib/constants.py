@@ -6,6 +6,13 @@ PUERTOTUPLA = 1
 
 TIPODEPROTOCOLO = "SW" 
 
+
+DEFAULT_SERVER_IP = "127.0.0.1"
+DEFAULT_SERVER_PORT = 5555
+
+DEFAULT_CLIENT_IP = "127.0.0.2"
+
+
 # Estos dos estan en bytes
 
 
@@ -83,3 +90,21 @@ class ServerFlags(Enum):
     HOST = "-H"
     PORT = "-p"
     STORAGE = "-s"
+
+
+
+"""
+TODO
+correr sin nada y que ande con ips cosas default
+correr con flags y que se seteen bien
+
+ver como falla con mininet si no seteo nada y corre con default
+ver que ande en mininet si le seteo las ips
+
+
+SERVER:
+valores default
+    ip = 127.0.0.1
+    puerto = 5555
+
+"""
