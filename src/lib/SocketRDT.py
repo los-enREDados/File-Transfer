@@ -120,11 +120,7 @@ class SocketRDT:
 
         # print(f"Bindiando en {myIP} y {myPort}")
         try:
-            print("TIPOS TIPOS")
-            print(type(myIP))
-            print(type(myPort))
             self.skt.bind((myIP, myPort))
-            print(self.skt.getsockname())
         except OSError:
             raise OSError("No se pudo bindear el socket")
 
@@ -146,7 +142,6 @@ class SocketRDT:
 
         # Voy a pedir conecciones hasta que alguien me mande el SYN
         try: 
-            print(f"Server esperando conexiones en {self.myAddress}")
             paquete_recibido, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE)
             paquete = Paquete.Paquete_from_bytes(paquete_recibido)
             mensajeConeccion = paquete.connect
@@ -212,7 +207,7 @@ class SocketRDT:
 
         while True:
             try: 
-                print("connect() enviando SYN")
+                #print("connect() enviando SYN")
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
                 
                 paqueteRecibido, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) 
@@ -231,7 +226,7 @@ class SocketRDT:
                 pass
         
         paqueteRecibido = Paquete.Paquete_from_bytes(paqueteRecibido)
-        print(f'paquete recibido en syn: {paqueteRecibido.getPayload()} , {len(paqueteRecibido.getPayload())}')
+        #print(f'paquete recibido en syn: {paqueteRecibido.getPayload()} , {len(paqueteRecibido.getPayload())}')
 
         nuevoPuerto = uint32Aint(paqueteRecibido.getPayload())
         print (f"Nuevo puerto recibido en connect: {nuevoPuerto}")

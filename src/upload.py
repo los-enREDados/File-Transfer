@@ -1,5 +1,5 @@
 from lib.SocketRDT import SocketRDT
-from lib.constants import ClientFlags, Mode
+from lib.constants import ClientFlags, Verbosity
 import lib.ProtocoloFS
 from sys import argv
 from lib.SocketRDT import ConnectionTimedOutError
@@ -9,7 +9,7 @@ import time
 
 
 class uploader_flags:
-    mode: Mode
+    verbosity: Verbosity
     host: str
     port: int
     myIp: str
@@ -17,7 +17,7 @@ class uploader_flags:
     name: str
 
     def __init__(self):
-        self.mode = Mode.NORMAL
+        self.verbosity = Verbosity.Verbose
         self.host = lib.constants.DEFAULT_SERVER_IP
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
@@ -28,7 +28,7 @@ def upload(flags):
     print(f"Quiero conectarme con : {flags.host}:{flags.port}")
     
     peerAddres = (flags.host, flags.port)
-
+    
     ownIp = lib.constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
     # Esto es para que si la ip no se puede asignar, se reintente con localhost
     try:
@@ -50,17 +50,13 @@ def upload(flags):
     except ConnectionTimedOutError as e:
        print(e)
         
-    
-
     lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+"/"+flags.name)
-
 
 def main():
     flags = uploader_flags()
-    flags.mode = Mode.NORMAL
     i = 1
     while i < len(argv):
-        if argv[i] == ClientFlags.HELP.value:
+        if argv[i] == ClientFlags.HELP.value or argv[i] == ClientFlags.HELPL.value:
             print("usage : upload [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s FILEPATH ] [ - n FILENAME ]\n\n" + 
                 "< command description > \n\n" +
                 "optional arguments : \n"
@@ -74,33 +70,36 @@ def main():
                 "-n , -- name file name\n"
                 )
             return
-        elif argv[i] == ClientFlags.VERBOSE.value:
-            flags.mode = Mode.VERBOSE
-            i += 1
-            
-        elif argv[i] == ClientFlags.QUIET.value:
-            flags.mode = Mode.QUIET
+        elif argv[i] == ClientFlags.VERBOSE.value or argv[i] == ClientFlags.VERBOSEL.value:
+            flags.verbosity = Verbosity.VERBOSE
             i += 1
 
-        elif argv[i] == ClientFlags.HOST.value:
+        elif argv[i] == ClientFlags.QUIET.value or argv[i] == ClientFlags.QUIETL.value:
+            flags.verbosity = Verbosity.QUIET
+            i += 1
+
+        elif argv[i] == ClientFlags.HOST.value or argv[i] == ClientFlags.HOSTL.value:
             flags.host = argv[i+1]
             i += 2
 
-        elif argv[i] == ClientFlags.PORT.value:
+        elif argv[i] == ClientFlags.PORT.value or argv[i] == ClientFlags.PORTL.value:
             flags.port = int(argv[i+1])
             i += 2
 
-        elif argv[i] == ClientFlags.MYIP.value:
+        elif argv[i] == ClientFlags.MYIP.value or argv[i] == ClientFlags.MYIPL.value:
             flags.myIp = argv[i+1]
             i += 2
 
-        elif argv[i] == ClientFlags.SRC.value:
+        elif argv[i] == ClientFlags.SRC.value or argv[i] == ClientFlags.SRCL.value:
             flags.src = argv[i+1]
             i += 2
 
-        elif argv[i] == ClientFlags.NAME.value:
+        elif argv[i] == ClientFlags.NAME.value or argv[i] == ClientFlags.NAMEL.value:
             flags.name = argv[i+1]
             i += 2
+
+
+
             
     upload(flags)
 

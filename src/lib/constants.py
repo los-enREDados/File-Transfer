@@ -7,10 +7,6 @@ PUERTOTUPLA = 1
 TIPODEPROTOCOLO = "SW" 
 
 
-DEFAULT_SERVER_IP = "127.0.0.1"
-DEFAULT_SERVER_PORT = 5005
-
-DEFAULT_CLIENT_IP = "127.0.0.2"
 
 
 # Estos dos estan en bytes
@@ -38,6 +34,8 @@ FIN = 1
 NOFIN = 0
 ERROR = 1
 NOERROR = 0
+IP = 0
+PORT = 1
 
 TAMANOLECTURAARCHIVO = None
 
@@ -74,44 +72,81 @@ MENSAJEACEPTARCONECCION= b"SYNACK"
 # Para sacar el packet loss
 # sudo tc qdisc del dev <interface_name> root
 
-class Mode(Enum):
-    NORMAL = 0
-    VERBOSE = 1
-    QUIET = 2
+class Verbosity(Enum):
+    VERBOSE = 0
+    QUIET = 1
 
 class ClientFlags(Enum):
     VERBOSE = "-v"
+    VERBOSEL = "--verbose"
+
     QUIET = "-q"
-    HELP = "-h"
-    HOST = "-H"
-    PORT = "-p"
+    QUIETL = "--quiet"
+    
     MYIP = "-m"
+    MYIPL = "--myIp"
+
+    HELP = "-h"
+    HELPL = "--help"
+
+    HOST = "-H"
+    HOSTL = "--host"
+        
+    PORT = "-p"
+    PORTL = "--port"
+    
     SRC = "-s"
+    SRCL = "--src"
+
     NAME = "-n"
+    NAMEL = "--name"
+
     DST = "-d"
+    DSTL = "--dst"
 
 class ServerFlags(Enum):
     VERBOSE = "-v"
     QUIET = "-q"
     HELP = "-h"
+    HELPL = "--help"
     HOST = "-H"
     PORT = "-p"
     STORAGE = "-s"
 
 
+## SERVER DEFAULT VALUES
+DEFAULT_SERVER_IP = "127.0.0.1"
+DEFAULT_SERVER_PORT = 5005
+DEFAULT_SERVER_STORAGE = "data/server"
+DEFAULT_SERVER_VERBOSITY = Verbosity.VERBOSE
+
+### CLIENT DEFAULT VALUES
+DEFAULT_CLIENT_IP = "127.0.0.2"
+DEFAULT_CLIENT_VERBOSITY = Verbosity.VERBOSE
+
+
+# COLORS
+
+PINK = '\033[95m'
+BLUE = '\033[94m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+ENDC = '\033[0m'
+
 
 """
-TODO
-correr sin nada y que ande con ips cosas default
-correr con flags y que se seteen bien
+    TODO
+    correr sin nada y que ande con ips cosas default
+    correr con flags y que se seteen bien
 
-ver como falla con mininet si no seteo nada y corre con default
-ver que ande en mininet si le seteo las ips
+    ver como falla con mininet si no seteo nada y corre con default
+    ver que ande en mininet si le seteo las ips
 
 
-SERVER:
-valores default
-    ip = 127.0.0.1
-    puerto = 5555
+    SERVER:
+    valores default
+        ip = 127.0.0.1
+        puerto = 5555
 
 """

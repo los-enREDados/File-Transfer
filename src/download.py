@@ -2,17 +2,18 @@ from lib.SocketRDT import SocketRDT
 from lib.SocketRDT import ConnectionTimedOutError
 import lib.ProtocoloFS
 from sys import argv
-from lib.constants import Mode, ClientFlags
+from lib.constants import Verbosity, ClientFlags
 import lib.constants
 
 class downloader_flags:
-    mode: lib.constants.Mode
+    verbosity: bool
     host: str
     port: int
     myIp: str
     dst: str
     name: str
     def __init__(self):
+        self.verbosity = lib.constants.DEFAULT_CLIENT_VERBOSITY
         self.host = lib.constants.DEFAULT_SERVER_IP
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
@@ -20,37 +21,26 @@ class downloader_flags:
 
 
 def download(flags: downloader_flags):
-    print("UDP target IP: %s" % flags.host)
-    print("UDP target port: %s" % flags.port)
-
 
     peerAddres = (flags.host, flags.port)
-
-
-    # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
-    # eso aplique para todos los casos. Esto me hace pensar que ni
-    # hace falta almacenar "myAddress". Para pensar
-
     serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.myIp)
 
+    print(f"{lib.constants.BLUE}+------------------------------------------------+")
+    print(f"| Hola soy un Cliente y estoy en {lib.constants.YELLOW}{flags.myIp}:{serverSCK.myAddress[1]}\033[94m |")
+    print(f"| Quiero conectarme con : {flags.host}:{flags.port}           |")
+    print("+------------------------------------------------+\033[0m")
 
-    print("mi puerto es ", serverSCK.myAddress[1])
-    print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
-
-    try :
+    try:
         serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
     except ConnectionTimedOutError as e:
         print(e)
         return
+    print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}")
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
 
-    
-    # nombre = path.split("/")[-1]
-
-    print(flags.dst)
-    print(flags.name)
-
+    print(f"\033[92mArchivo {flags.name} recibido! Guardando en {flags.dst + flags.name}")
+ 
     with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)
 
@@ -59,10 +49,9 @@ def main():
     # TODO: Hacer que ande con las flags
     # por ahora lo hacemos asi para que ande
     flags = downloader_flags()
-    flags.mode = Mode.NORMAL
     i = 1
     while i < len(argv):
-        if argv[i] == ClientFlags.HELP.value:
+        if argv[i] == ClientFlags.HELP.value or argv[i] == ClientFlags.HELPL.value:
             print(
                 "usage : download [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - d FILEPATH ] [ - n FILENAME ]\n\n"
                 "< command description >\n\n"
@@ -76,28 +65,30 @@ def main():
                 "-n , -- name file name\n"
                 )
             return
-        elif argv[i] == ClientFlags.VERBOSE.value:
-            flags.mode = Mode.VERBOSE
+        elif argv[i] == ClientFlags.VERBOSE.value or argv[i] == ClientFlags.VERBOSEL.value:
+            flags.verbosity = Verbosity.VERBOSE 
             i += 1
 
-        elif argv[i] == ClientFlags.QUIET.value:
-            flags.mode = Mode.QUIET
+        elif argv[i] == ClientFlags.QUIET.value or argv[i] == ClientFlags.QUIETL.value:
+            flags.verbosity = Verbosity.QUIET
             i += 1
 
-        elif argv[i] == ClientFlags.HOST.value:
+        elif argv[i] == ClientFlags.HOST.value or argv[i] == ClientFlags.HOSTL.value:
             flags.host = argv[i+1]
             i += 2
 
-        elif argv[i] == ClientFlags.PORT.value:
+        elif argv[i] == ClientFlags.PORT.value or argv[i] == ClientFlags.PORTL.value:
             flags.port = int(argv[i+1])
             i += 2
 
-        elif argv[i] == ClientFlags.DST.value:
+        elif argv[i] == ClientFlags.DST.value or argv[i] == ClientFlags.DSTL.value:
             flags.dst = argv[i+1]
             i += 2
 
-        elif argv[i] == ClientFlags.NAME.value:
+        elif argv[i] == ClientFlags.NAME.value or argv[i] == ClientFlags.NAMEL.value:
             flags.name = argv[i+1]
             i += 2
+
     download(flags)
+    
 main()
