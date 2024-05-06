@@ -113,9 +113,11 @@ class SocketRDT:
         # ATTENTION: Necesitamos bindearlo siempre porque tanto cliente
         # como servidor van a enviar y recibir cosas.
         # print(f"Bindiando en {myIP} y {myPort}")
-        self.skt.bind((myIP, myPort))
-        print(self.skt.getsockname())
-
+        try:
+            self.skt.bind((myIP, myPort))
+            print(self.skt.getsockname())
+        except OSError:
+            raise OSError("No se pudo bindear el socket")
         # ATTENTION: No se si hace falta guardar "mi propio address"
         # Lo pongo por si lo llegamos a necesitar
         myPort = self.skt.getsockname()[1]

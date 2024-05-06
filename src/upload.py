@@ -14,23 +14,27 @@ class uploader_flags:
     src: str
     name: str
 
+    def __init__(self):
+        self.mode = Mode.NORMAL
+        self.host = "127.0.0.1"
+        self.port = 5555
+        self.myIp = "127.0.0.2"
+        
+
 def upload(flags):
     print(f"Soy {flags.myIp}")
     print(f"Quiero conectarme con : {flags.host}:{flags.port}")
     
     peerAddres = (flags.host, flags.port)
 
-    # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
-    # eso aplique para todos los casos. Esto me hace pensar que ni
-    # hace falta almacenar "myAddress". Para pensar
-    #ternaty operator
-    
-
     ownIp = "127.0.0.2" if flags.myIp is None  else flags.myIp
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
-
-    print(
-        f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
+    try:
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
+    except OSError as e:
+        print("Error al crear el socket. Intentando con Ip 127.0.0.2")
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, "127.0.0.2")
+        
+    print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
     # FALTA IMPLEMENTAR:
     #   *modos verbose y quiet

@@ -13,6 +13,13 @@ class server_state_flags:
     stge: str
     name: str
 
+    def __init__(self):
+        self.mode = lib.constants.Mode.NORMAL
+        self.host = "127.0.0.1"
+        self.port = 5555
+        self.stge = "../data/server/"
+        
+
 #    DIR.archivo
 from lib.SocketRDT import SocketRDT, bytesAstr, uint32Aint
 import lib.ProtocoloFS
@@ -23,11 +30,9 @@ from sys import argv
 
 
 UDP_IP = "10.0.0.1"
-UDP_PORT = 5005
+UDP_PORT = 5555
 
 # SERVER_PATH = "../data/server/"
-
-
 
 seguir_corriendo = True
 lock = threading.Lock()
@@ -48,6 +53,9 @@ class Listener:
 
         def __init__ (self, flags):
             self.flags = flags
+            if flags.host == None:
+                flags.host = "127.0.0.1"
+
             self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO, None,
                                         (0,0), flags.host, flags.port)
 
@@ -119,35 +127,6 @@ def worker(socketRDT, paquete, stge, mode = Mode.NORMAL):
             print(f"El archivo {nombre} no existe")
             
 
-
-    
-
-# class Worker:
-#     def __init__ (self, addressCliente, myIP):
-#         self.socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, addressCliente, myIP)
-
-#         self.socketRDT.syncAck()
-
-#         self.socketRDT.receive_all(mensaje)
-
-#         if mensaje == "voy a subir":
-#             upload()
-#         else:
-#             download()
-
-
-#         print(f"Creo un worker con Puerto: {self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA]}")
-        
-#     def hablar(self):
-#         data = self.socketRDT.receive_all()
-#         print ("\033[94mEl worker recibió: ", data.decode('utf-8'), " de: ", self.socketRDT.peerAddr[lib.constants.PUERTOTUPLA], "\n \033[0")
-
-#         message = data.upper()
-#         message_bytes = bytes(f"{message}", 'utf-8')
-
-#         self.socketRDT.sendall(message_bytes)
-    
-    
 
 
 def __main__():
