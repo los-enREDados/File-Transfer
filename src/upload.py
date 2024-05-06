@@ -2,7 +2,11 @@ from lib.SocketRDT import SocketRDT
 from lib.constants import ClientFlags, Mode
 import lib.ProtocoloFS
 from sys import argv
-from lib.constants import constants
+from lib.SocketRDT import ConnectionTimedOutError
+import lib.constants
+from sys import argv
+import time
+
 
 class uploader_flags:
     mode: Mode
@@ -26,6 +30,7 @@ def upload(flags):
     peerAddres = (flags.host, flags.port)
 
     ownIp = constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
+    # Esto es para que si la ip no se puede asignar, se reintente con localhost
     try:
         serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
     except OSError as e:
@@ -34,21 +39,26 @@ def upload(flags):
         
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
+
     # FALTA IMPLEMENTAR:
     #   *modos verbose y quiet
     #   *flags.name
     # Connect debería recibir los flags y laburar en base a eso
-    serverSCK.connect(lib.constants.UPLOAD, flags.name)
+    
+    try:
+       serverSCK.connect(lib.constants.UPLOAD, flags.name)
+    except ConnectionTimedOutError as e:
+       print(e)
+        
+    
 
     lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+"/"+flags.name)
 
 
 def main():
-
     flags = uploader_flags()
     flags.mode = Mode.NORMAL
     i = 1
-
     while i < len(argv):
         if argv[i] == ClientFlags.HELP.value:
             print("usage : upload [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s FILEPATH ] [ - n FILENAME ]\n\n" + 
@@ -67,7 +77,7 @@ def main():
         elif argv[i] == ClientFlags.VERBOSE.value:
             flags.mode = Mode.VERBOSE
             i += 1
-
+            
         elif argv[i] == ClientFlags.QUIET.value:
             flags.mode = Mode.QUIET
             i += 1
@@ -91,8 +101,15 @@ def main():
         elif argv[i] == ClientFlags.NAME.value:
             flags.name = argv[i+1]
             i += 2
-
+            
     upload(flags)
 
 if __name__ == "__main__":
+    start_time = time.time()
     main()
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
+
+main()
+

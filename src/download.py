@@ -1,5 +1,5 @@
 from lib.SocketRDT import SocketRDT
-
+from lib.SocketRDT import ConnectionTimedOutError
 import lib.ProtocoloFS
 from sys import argv
 from lib.constants import Mode, ClientFlags
@@ -15,12 +15,17 @@ class downloader_flags:
     dst: str
     name: str
 
+
 def download(flags: downloader_flags):
     print("UDP target IP: %s" % flags.host)
     print("UDP target port: %s" % flags.port)
 
 
+    print(path)
+
+
     peerAddres = (flags.host, flags.port)
+
 
     # WARNING: Aca digo que "myIP" es localhost. No estoy 100% de que
     # eso aplique para todos los casos. Esto me hace pensar que ni
@@ -31,12 +36,17 @@ def download(flags: downloader_flags):
     print("mi puerto es ", serverSCK.myAddress[1])
     print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
 
-    serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
-   
+    try :
+        serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
+    except ConnectionTimedOutError as e:
+        print(e)
+        return
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
+
     
-    print("\033[92mArchivo Recibido!\033[0m")
+    nombre = path.split("/")[-1]
+
 
     with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)
@@ -88,4 +98,3 @@ def main():
             i += 2
     download(flags)
 main()
-
