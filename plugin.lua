@@ -45,8 +45,9 @@ function rdt_ft.dissector(buffer, pinfo, tree)
   local seqNum_pos = 0
   local seqNum_len = 4
   local seqNum_buffer = buffer(seqNum_pos, seqNum_len)
-  -- field_seqNum = bytes_to_int(field_seqNum.valuestring, "big", true)
-  payload_tree:add(field_seqNum, seqNum_buffer:le_uint64():tohex())
+
+  -- payload_tree:add(field_seqNum, seqNum_buffer)
+  payload_tree:add_packet_field(field_seqNum, seqNum_buffer, ENC_BIG_ENDIAN)
 
   local connect_pos = seqNum_pos + seqNum_len
   local connect_len = 1 
@@ -77,4 +78,10 @@ end
 
 --we register our protocol on UDP port 5005
 udp_table = DissectorTable.get("udp.port"):add(5005, rdt_ft)
-register_postdissector(rdt_ft)
+udp_table = DissectorTable.get("udp.port"):add(5006, rdt_ft)
+udp_table = DissectorTable.get("udp.port"):add(5007, rdt_ft)
+udp_table = DissectorTable.get("udp.port"):add(5008, rdt_ft)
+udp_table = DissectorTable.get("udp.port"):add(5009, rdt_ft)
+udp_table = DissectorTable.get("udp.port"):add(50010, rdt_ft)
+udp_table = DissectorTable.get("udp.port"):add(50011, rdt_ft)
+-- register_postdissector(rdt_ft)

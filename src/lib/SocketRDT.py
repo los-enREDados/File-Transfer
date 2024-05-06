@@ -5,6 +5,8 @@ import datetime
 import struct
 from enum import Enum
 
+UDP_PORT = 5005
+
 class Tipo(Enum):
     UPLOAD = 1
     DOWNLOAD = 2
@@ -95,6 +97,7 @@ class Paquete:
 
 
 class SocketRDT:
+    ULTIMOPUERTO = 5005
     #                                        myPort=0 significa que me
     #                                        va a dar un puerto random
     #                                        cada vez. El listener/Server
@@ -112,7 +115,16 @@ class SocketRDT:
         # nuevo cada vez. Fuente: https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
         # ATTENTION: Necesitamos bindearlo siempre porque tanto cliente
         # como servidor van a enviar y recibir cosas.
+        # if myPort == 0:
+        #     self.ULTIMOPUERTO += 1
+        #     self.skt.bind((myIP, self.ULTIMOPUERTO))
+
+        # else:
+        #     self.skt.bind((myIP, myPort))
+
+        # SI ROMPE ARRIBA, poner esto: 
         self.skt.bind((myIP, myPort))
+
         print(self.skt.getsockname())
 
         # ATTENTION: No se si hace falta guardar "mi propio address"
