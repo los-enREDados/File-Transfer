@@ -34,6 +34,8 @@ class Server:
             self.seguir_corriendo = State()
             self.listener = None
 
+            self.proximoPuerto = port + 1
+
         def start(self):
             self.listener = threading.Thread(target=self.listen, args=(self.seguir_corriendo,))
 
@@ -93,7 +95,8 @@ class Server:
             
 
         def handshake(self, addressCliente, myIP, paquete):
-            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIP)
+            socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIP, self.proximoPuerto)
+            self.proximoPuerto += 1
             nuevoPuerto = socketRDT.skt.getsockname()[1]
             try :
                 self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete)
