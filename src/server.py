@@ -91,7 +91,7 @@ class Server:
 
         def listen(self, seguir_corriendo):
             while seguir_corriendo.estado:
-                print("Escuchando conexiones...")
+                print(f"Escuchando conexiones en \033[93m{self.recieveSocket.myAddress[0]}:{self.recieveSocket.myAddress[1]}\033[0m...")
                 try: 
                     paquete, addr  = self.recieveSocket.acceptConnection() # Añadir modo (verbose, quiet)
                     if (not paquete or addr[1] in self.conexiones):
@@ -214,12 +214,12 @@ def __main__():
                 "usage : start - server [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s DIRPATH ]\n\n"
                 "< command description >\n\n"
                 "optional arguments :\n"
-                "-h , -- help show this help message and exit\n"
-                "-v , -- verbose increase output verbosity\n"
-                "-q , -- quiet decrease output verbosity\n"
-                "-H , -- host service IP address\n"
-                "-p , -- port service port\n"
-                "-s , -- storage storage dir path\n"
+                "-h , --help        show this help message and exit\n"
+                "-v , --verbose     increase output verbosity\n"
+                "-q , --quiet       decrease output verbosity\n"
+                "-H , --host        service IP address\n"
+                "-p , --port        service port\n"
+                "-s , --storage     storage dir path\n"
                 )
             return
         elif argv[i] == ServerFlags.VERBOSE.value:
@@ -252,7 +252,7 @@ def __main__():
 __main__()
 
 '''
-Ips y puertos default y custom
+Ips y puertos default y custom Chequeadisimo
 paths default y custom
 verbose y quiet
 '''

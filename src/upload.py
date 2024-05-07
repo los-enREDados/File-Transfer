@@ -45,15 +45,23 @@ def upload(flags):
     #   *flags.name
     # Connect debería recibir los flags y laburar en base a eso
     
+
+
+
     try:
        serverSCK.connect(lib.constants.UPLOAD, flags.name)
     except ConnectionTimedOutError as e:
        print(e)
     
     # NOTE: Si no tiene el "/" final, se la anado
-    if flags.src[-1] != "/":
-        flags.src += "/"
-    lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+flags.name)
+    try :
+        if flags.src[-1] != "/":
+            flags.src += "/"
+        lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+flags.name)
+    except AttributeError:
+        print("Por favor ingrese el archivo a subir con -n y el path con -s")
+    except ConnectionTimedOutError:
+        print("Connection Timed Out ")
 
 def main():
     flags = uploader_flags()
@@ -63,14 +71,14 @@ def main():
             print("usage : upload [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - s FILEPATH ] [ - n FILENAME ]\n\n" + 
                 "< command description > \n\n" +
                 "optional arguments : \n"
-                "-h , -- help show this help message and exit \n"
-                "-v , -- verbose increase output verbosity \n"
-                "-q , -- quiet decrease output verbosity \n"
-                "-H , -- host server IP address \n"
-                "-p , -- port server port \n"
-                "-m , -- myIp my IP address (default 127.0.0.2) \n"
-                "-s , -- src source file path \n"
-                "-n , -- name file name\n"
+                "-h , --help       show this help message and exit \n"
+                "-v , --verbose    increase output verbosity \n"
+                "-q , --quiet      decrease output verbosity \n"
+                "-H , --host       server IP address \n"
+                "-p , --port       server port \n"
+                "-m , --myIp       my IP address (default 127.0.0.2) \n"
+                "-s , --src        source file path \n"
+                "-n , --name       file name\n"
                 )
             return
         elif argv[i] == ClientFlags.VERBOSE.value or argv[i] == ClientFlags.VERBOSEL.value:
@@ -101,7 +109,9 @@ def main():
             flags.name = argv[i+1]
             i += 2
 
-
+        else:
+            print(f"Flag {argv[i]} no reconocida")
+            return
 
             
     upload(flags)

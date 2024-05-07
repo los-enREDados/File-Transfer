@@ -348,6 +348,7 @@ class SocketRDT:
                 paqueteAck = Paquete(seqNumAEnviar, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, b"")
 
                 self.skt.sendto(paqueteAck.misBytes, self.peerAddr)
+                
             except TimeoutError:
                 raise ConnectionTimedOutError("CONNECTION TIMED OUT")
         
@@ -512,8 +513,8 @@ class SocketRDT:
 
             else:
                 seqNumAEnviar = seqNumActual
-                timemouts_seguidos = 0
                 if seqNumAEnviar < ventana[1]:
+                    timemouts_seguidos = 0
                     seqNumActual += 1
 
             if timemouts_seguidos > cantPaquetesAenviar :

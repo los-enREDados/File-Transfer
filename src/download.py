@@ -18,6 +18,7 @@ class downloader_flags:
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
         self.dst  = "data/cliente/"
+        self.name = None
 
 
 def download(flags: downloader_flags):
@@ -32,9 +33,13 @@ def download(flags: downloader_flags):
 
     try:
         serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
+    except AttributeError as e:
+        print("Por favor ingrese nombre de archivo con las flags correspondientes\n")
+        return
     except ConnectionTimedOutError as e:
         print(e)
         return
+    
     print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}")
 
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
@@ -51,19 +56,22 @@ def main():
     # por ahora lo hacemos asi para que ande
     flags = downloader_flags()
     i = 1
+    print(argv)
     while i < len(argv):
-        if argv[i] == ClientFlags.HELP.value or argv[i] == ClientFlags.HELPL.value:
+        print(f'argv[i] = {argv[i]}')
+        if  argv[i] == ClientFlags.HELP.value or argv[i] == ClientFlags.HELPL.value:
             print(
                 "usage : download [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - d FILEPATH ] [ - n FILENAME ]\n\n"
                 "< command description >\n\n"
                 "optional arguments :\n"
-                "-h , -- help show this help message and exit\n"
-                "-v , -- verbose increase output verbosity\n"
-                "-q , -- quiet decrease output verbosity\n"
-                "-H , -- host server IP address\n"
-                "-p , -- port server port\n"
-                "-d , -- dst destination file path\n"
-                "-n , -- name file name\n"
+                "-h , --help       show this help message and exit\n"
+                "-v , --verbose    increase output verbosity\n"
+                "-q , --quiet      decrease output verbosity\n"
+                "-H , --host       server IP address\n"
+                "-p , --port       server port\n"
+                "-m , --myIp       my IP address (default 127.0.0.2) \n"
+                "-d , --dst        destination file path\n"
+                "-n , --name       file name\n"
                 )
             return
         elif argv[i] == ClientFlags.VERBOSE.value or argv[i] == ClientFlags.VERBOSEL.value:
@@ -82,6 +90,10 @@ def main():
             flags.port = int(argv[i+1])
             i += 2
 
+        elif argv[i] == ClientFlags.MYIP.value or argv[i] == ClientFlags.MYIPL.value:
+            flags.myIp = argv[i+1]
+            i += 2
+
         elif argv[i] == ClientFlags.DST.value or argv[i] == ClientFlags.DSTL.value:
             flags.dst = argv[i+1]
             i += 2
@@ -89,6 +101,10 @@ def main():
         elif argv[i] == ClientFlags.NAME.value or argv[i] == ClientFlags.NAMEL.value:
             flags.name = argv[i+1]
             i += 2
+
+        else:
+            print(f"Flag {argv[i]} no reconocida")
+            return
 
     download(flags)
     
