@@ -120,71 +120,46 @@ Por otro lado, el receptor va recibiendo paquetes y va enviando acknowledges de 
 
 \section{\texorpdfstring{\textbf{Pruebas}}{Pruebas}}\label{pruebas-wip}
 
-\hl{(poner capturas de la terminal con lo que loguea el cliente y el
-server) -\textgreater{} HACER PRETTY PRINT ANTES DE ESTO}
+\subsection{Sin perdida}
+\subsubsection{Upload Joseph.jpg (6,5MB) con Stop \& Wait}
+\begin{center}
+\includegraphics[scale=0.35]{UploadJoseph.jpg(6,5MB)conStopWait}
+\end{center}
 
-Sin perdida
-Upload Joseph.jpg (6,5MB) con Stop & Wait
+\subsubsection{Upload Joseph.jpg (6,5MB) con Selective Repeat}
+\begin{center}
+\includegraphics[scale=0.35]{UploadJoseph.jpg(6,5MB)conSelectiveRepeat}
+\end{center}
 
-Upload Joseph.jpg (6,5MB) con Selective Repeat
+\subsubsection{Download Grupo12.png (1,2MB) con Stop \& Wait}
+\begin{center}
+\includegraphics[scale=0.35]{DownloadGrupo12.png(1,2MB)conStopWait}
+\end{center}
 
+\subsubsection{Download Grupo12.png (1,2MB) con Selective Repeat}
+\begin{center}
+\includegraphics[scale=0.35]{DownloadGrupo12.png(1,2MB)conSelectiveRepeat}
+\end{center}
 
-Download Grupo12.png (1,2MB) con Stop & Wait
+\subsection{Perdida 10\%}
 
-Download Grupo12.png (1,2MB) con Selective Repeat
+\subsubsection{Download rick.mp4 (9,1MB) con Stop \& Wait}
+\begin{center}
+\includegraphics[scale=0.35]{conPerdidaUploadrick.mp4(9,1MB)conStopWait}
+\end{center}
+\subsubsection{Download rick.mp4 (9,1MB) con Selective Repeat}
+\begin{center}
+\includegraphics[scale=0.35]{conPerdidaUploadrick.mp4(9,1MB)conSelectiveRepeat}
+\end{center}
+\subsubsection{Upload Grupo12.png (1,2MB) con Stop \& Wait}
+\begin{center}
+\includegraphics[scale=0.35]{DownloadGrupo12.png(1,2MB)conStopWait}
+\end{center}
+\subsubsection{Upload Grupo12.png (1,2MB) con Selective Repeat}
+\begin{center}
+\includegraphics[scale=0.35]{DownloadGrupo12.png(1,2MB)conSelectiveRepeat}
+\end{center}
 
-Perdida 10%
-Download rick.mp4 (9,1MB) con Stop & Wait
-
-Download rick.mp4 (9,1MB) con Selective Repeat
-
-
-Upload Grupo12.png (1,2MB) con Stop & Wait
-
-Upload Grupo12.png (1,2MB) con Selective Repeat
-
-
-Perdida 50%
-Upload rick.mp4 (9,1MB) con Stop & Wait
-
-Upload rick.mp4 (9,1MB) con Selective Repeat
-
-
-Download Grupo12.png (1,2MB) con Stop & Wait
-
-Download Grupo12.png (1,2MB) con Selective Repeat
-
-
-BORRAR ACA
-\textbf{Sin perdida}
-
-Alquimista 5MB stop \& wait
-
-Alquimista 5MB selective repeat
-
-Grupo12 1MB stop \& wait
-
-Grupo12 1MB selective repeat
-
-\textbf{Perdida 10\%}
-
-Rick 5MB stop \& wait
-
-Rick 5MB selective repeat
-
-Grupo12 1MB stop \& wait
-
-Grupo12 1MB selective repeat
-
-\textbf{Perdida 50\%}
-
-Rick 5MB stop \& wait
-
-Rick 5MB selective repeat
-
-Grupo12 1MB stop \& wait
-
-Grupo12 1MB selective repeat
 
 \section{\texorpdfstring{\textbf{Mininet}}{Mininet}}\label{mininet}
 
