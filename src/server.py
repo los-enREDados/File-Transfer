@@ -1,13 +1,12 @@
 import sys
 import socket
 import os
-
+import time
 import lib.SocketRDT 
 from lib.SocketRDT import SocketRDT, bytesAstr , ConnectionTimedOutError, ConnectionAttemptTimedOutError
-import lib.ProtocoloFS
+from lib.ProtocoloFS import mandarArchivo, recibirArchivo
 import lib.constants
-from lib.constants import IP
-from lib.constants import ServerFlags
+from lib.constants import IP , ServerFlags , pretty_print
 import threading
 from sys import argv
 
@@ -42,7 +41,7 @@ class Server:
             port = flags.port
             
             self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO, None,
-                                        (0,0), ip, port)
+                                        (0,0), self.flags.verbosity, ip, port)
             self.conexiones = {}
             self.seguir_corriendo = Conexion()
             self.listener = None
@@ -57,31 +56,30 @@ class Server:
             
             self.listener.start()
             while self.seguir_corriendo.estado:
-                input_server = input("      Presione q para cerrar el servidor\n")
+                input_server = input("Presione q para cerrar el servidor\n")
                 if input_server == "q":
                     self.seguir_corriendo.estado = False
-                    print("Cerrando servidor...")
+                    pretty_print("Cerrando servidor...", self.flags.verbosity)
 
             self.shutdown()
 
         def shutdown(self):
             self.seguir_corriendo.estado = False
-            print(f'mato listener')
             self.listener.join()
             self.recieveSocket.shutdown()
-            print(f'mato conexiones')
+            if (self.conexiones.values()) : pretty_print(f'cerrando conexiones pendientes', self.flags.verbosity)
             for conexion in self.conexiones.values():
                 if(self.conexiones[conexion.id].conexion.estado) :
-                    print(f"Apagando conexion {conexion.id}")
                     conexion.socketRDT.shutdown()
                     self.conexiones[conexion.id].conexion.estado = False
+                    pretty_print(f'cerrando conexion con {conexion.addressCliente}', self.flags.verbosity)
                 conexion.join()
             
         def check_dead(self):
             deads = []
             for worker in self.conexiones.values():
                 if not worker.conexion.estado:
-                    print(f"Conexion {worker.id} ha muerto")
+                    print(f"{worker.addressCliente} se ha desconectado")
                     deads.append(worker.id)
 
             for id in deads:
@@ -100,10 +98,8 @@ class Server:
                     if (not paquete or addr[1] in self.conexiones):
                         continue
 
-                    print(f"Recibi un paquete de {addr}")
-                    print(f"Hago el handshake con {addr}")
+                    print(f"Nueva conexion con {addr}")
                     self.handshake(addr, paquete) # Añadir modo (verbose, quiet)
-                    print(f"Termine el handshake con {addr}")
   
                 except ConnectionAttemptTimedOutError or OSError:
                     pass
@@ -114,7 +110,7 @@ class Server:
             myIp = self.recieveSocket.myAddress[IP]
 
             try :
-                socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, myIp, self.proximoPuerto)
+                socketRDT = SocketRDT(lib.constants.TIPODEPROTOCOLO, paquete.tipo, addressCliente, self.flags.verbosity ,myIp, self.proximoPuerto)
             except socket.error as e:
                 print(f"Error al crear socket: {e}")
                 self.proximoPuerto += 1
@@ -122,72 +118,66 @@ class Server:
 
             self.proximoPuerto += 1
             nuevoPuerto = socketRDT.skt.getsockname()[1]
-            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete) # Añadir modo (verbose, quiet)
+            self.recieveSocket.syncAck(nuevoPuerto, socketRDT, paquete) 
 
             # NOTE: Aca arranca el nuevo thread
-            print(f"[Nuevo cliente: {addressCliente}]")
-            w = worker(socketRDT, paquete, self.flags.stge) # self.flags.stge) # Añadir modo (verbose, quiet)
+            w = worker(socketRDT, paquete, self.flags.stge, self.flags.verbosity) 
             w.run()
             self.conexiones[socketRDT.peerAddr[1]] = w
 
 
 class worker: 
-    def __init__(self, socketRDT, paquete, storage): 
+    def __init__(self, socketRDT, paquete, storage, verbosity): 
         self.socketRDT = socketRDT
         self.addressCliente = socketRDT.peerAddr
         self.nombre = bytesAstr(paquete.getPayload())
         self.tipo = paquete.tipo
         self.id = socketRDT.peerAddr[1]
         self.conexion = Conexion()
-        self.thread = threading.Thread(target=work, args=(self.socketRDT, paquete, self.conexion, storage))
+        self.thread = threading.Thread(target=work, args=(self.socketRDT, paquete, self.conexion, storage , verbosity))
     
     def run(self):
         try :
             self.thread.start()
         except Exception as e:
-            print(f"Error en worker {self.id}: {e}")
             self.conexion.estado = False
 
     def join(self):
         self.thread.join()
 
-def work(socketRDT, paquete, conexion, storage):
+def work(socketRDT, paquete, conexion, storage, verbosity):
     addressCliente = socketRDT.peerAddr
     nombre = bytesAstr(paquete.getPayload())
-    print(nombre)
     tipo = paquete.tipo
+    
     # NOTE: Si no tiene el "/" final, se la anado
     if storage[-1] != "/":
         storage += "/"
     try :
         if tipo == lib.constants.UPLOAD:
             nombreArchivo = nombre.split("/")[-1]
-            print(f"Me esta llegando el archivo: {nombreArchivo}")
-        
-            archivo_recibido = socketRDT.receive_all()
-                
-        
-            print("\033[92mArchivo Recibido!\033[0m")
 
-            print(storage)
-            print(nombreArchivo)
+            pretty_print(f"\033[92mMe esta llegando el archivo: {nombreArchivo}\033[0m", verbosity)
+
+            archivo_recibido = recibirArchivo(socketRDT)
+                
+            print(f"\033[92mArchivo Recibido de {addressCliente} \033[0m")
+
             with open(storage + nombreArchivo, "wb") as file:
-                file.write(archivo_recibido) # Añadir modo (verbose, quiet)
+                file.write(archivo_recibido) 
 
         elif tipo == lib.constants.DOWNLOAD:
-                with open(storage + nombre, "rb") as file:
-                    archivo = file.read()    
-                    print(f"\033[93mEnviando {storage}/{nombre} a {addressCliente}...\033[0m")
-                    socketRDT.sendall(archivo)
-
+                pretty_print(f"\033[93mEnviando {storage}/{nombre} a {addressCliente}...\033[0m", verbosity)
+                try :
+                    mandarArchivo(socketRDT, nombre, storage)
+                except FileNotFoundError:
+                    pretty_print(f"El archivo solicitado por {addressCliente} {nombre} no existe", verbosity)
+                    socketRDT.sendall(None)
+                    return
                 print(f"\033[92mArchivo {nombre} enviado a {addressCliente}!\033[0m")
-
-    except FileNotFoundError:
-            print(f"El archivo {nombre} no existe")
-            socketRDT.sendall(None)
+            
 
     except ConnectionTimedOutError:
-            print(f"Murio la conexion con {addressCliente}")
             conexion.estado = False
             return
         
@@ -242,16 +232,7 @@ def __main__():
     if lib.constants.TIPODEPROTOCOLO != "SW" and lib.constants.TIPODEPROTOCOLO != "SR":
         sys.exit(f'''
 \033[91mERROR\033[0m: Tipo de protocolo desconocido: {lib.constants.TIPODEPROTOCOLO}''')
-    # o sacar ip y puerto de aca, o hacer que server reciba flags
     server = Server(flags)
     server.start()
 
 __main__()
-
-'''
-Ips y puertos default y custom Chequeadisimo
-paths default y custom Chequeadisimo
-verbose y quiet
-
-opcional: que el server le avise al cliente cuando el archivo no exista, en vez de timeout
-'''

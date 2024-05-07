@@ -1,9 +1,8 @@
 import os
-from lib.SocketRDT import SocketRDT
-from lib.constants import ClientFlags
+from lib.SocketRDT import SocketRDT, ConnectionTimedOutError
+from lib.constants import ClientFlags , pretty_print
 import lib.ProtocoloFS
 from sys import argv
-from lib.SocketRDT import ConnectionTimedOutError
 import lib.constants
 from sys import argv
 import time
@@ -28,28 +27,23 @@ class uploader_flags:
         
 
 def upload(flags):
-    print(f"Soy {flags.myIp}")
-    print(f"Quiero conectarme con : {flags.host}:{flags.port}")
+
+
     
     peerAddres = (flags.host, flags.port)
     
     ownIp = lib.constants.DEFAULT_CLIENT_IP if flags.myIp is None  else flags.myIp
     # Esto es para que si la ip no se puede asignar, se reintente con localhost
     try:
-        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, ownIp)
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, flags.verbosity, ownIp)
     except OSError as e:
         print(f"Error al crear el socket. Reasignando Ip al cliente: {lib.constants.DEFAULT_CLIENT_IP}")
-        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, lib.constants.DEFAULT_CLIENT_IP)
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.UPLOAD, peerAddres, flags.verbosity, lib.constants.DEFAULT_CLIENT_IP)
         
-    print(f"Puerto ANTES de conectarme: {serverSCK.peerAddr[lib.constants.PUERTOTUPLA]}")
-
-
-    # FALTA IMPLEMENTAR:
-    #   *modos verbose y quiet
-    #   *flags.name
-    # Connect debería recibir los flags y laburar en base a eso
-    
-
+    print(f"{lib.constants.BLUE}+------------------------------------------------+")
+    print(f"| Hola soy un Cliente y estoy en {lib.constants.YELLOW}{flags.myIp}:{serverSCK.myAddress[1]}\033[94m |")
+    print(f"| Quiero conectarme con : {flags.host}:{flags.port}         |")
+    print("+------------------------------------------------+\033[0m")
 
 
     try:
@@ -57,12 +51,13 @@ def upload(flags):
     except ConnectionTimedOutError as e:
        print(e)
        return
-    
+
+    pretty_print(f"\033[95mSubiendo {flags.name} a {flags.myIp}:{serverSCK.myAddress[1]}", flags.verbosity)    
     # NOTE: Si no tiene el "/" final, se la anado
     try :
         if flags.src[-1] != "/":
             flags.src += "/"
-        lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+flags.name)
+        lib.ProtocoloFS.mandarArchivo(serverSCK, flags.name , flags.src)
     except AttributeError:
         print("Por favor ingrese el archivo a subir con -n y el path con -s")
     except ConnectionTimedOutError:
@@ -120,9 +115,7 @@ def main():
         else:
             print(f"Flag {argv[i]} no reconocida")
             return
-
-    print(f"flags.src = {flags.src}")
-    print(f"flags.name = {flags.name}")
+        
     if os.path.isdir(flags.src) == False:
         print(f"El directorio {(flags.src)} no existe")
         return
@@ -135,8 +128,10 @@ def main():
         print(f"El archivo {flags.src+flags.name} es demasiado grande")
         return
 
-            
+    start = time.time()  
     upload(flags)
+    pretty_print(f"Tiempo de subida: {(time.time() - start):.2f} segundos", flags.verbosity)
+
 
 if __name__ == "__main__":
     start_time = time.time()

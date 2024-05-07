@@ -2,9 +2,11 @@ from lib.SocketRDT import SocketRDT
 from lib.SocketRDT import ConnectionTimedOutError, PackageError
 import lib.ProtocoloFS
 from sys import argv
-from lib.constants import ClientFlags
+from lib.constants import ClientFlags , pretty_print
 import lib.constants
 import os
+import time
+
 
 class downloader_flags:
     verbosity: bool
@@ -26,32 +28,37 @@ def download(flags: downloader_flags):
 
     peerAddres = (flags.host, flags.port)
     try:
-        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.myIp)
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.verbosity, flags.myIp)
     except OSError as e:
         print(f"Error al crear el socket. Reasignando Ip al cliente: {lib.constants.DEFAULT_CLIENT_IP}")
-        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, lib.constants.DEFAULT_CLIENT_IP)
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.verbosity,lib.constants.DEFAULT_CLIENT_IP)
+
 
     print(f"{lib.constants.BLUE}+------------------------------------------------+")
     print(f"| Hola soy un Cliente y estoy en {lib.constants.YELLOW}{flags.myIp}:{serverSCK.myAddress[1]}\033[94m |")
-    print(f"| Quiero conectarme con : {flags.host}:{flags.port}           |")
+    print(f"| Quiero conectarme con : {flags.host}:{flags.port}         |")
     print("+------------------------------------------------+\033[0m")
+
+
 
     try: 
         serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
-        print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}") 
+        pretty_print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}", flags.verbosity) 
         archivo = lib.ProtocoloFS.recibirArchivo(serverSCK)
         
+    except AttributeError as e:
+        print(e)
+        print("Por favor ingrese nombre de archivo con las flags correspondientes\n")
+        return
     except PackageError:
         print(f"\033[91m Archivo: {flags.name} no existe en el servidor")
         return  
     except ConnectionTimedOutError as e:
+        if flags.verbosity == lib.constants.VERBOSE: print()
         print(e)
         return
-    except AttributeError as e:
-        print("Por favor ingrese nombre de archivo con las flags correspondientes\n")
-        return
 
-        
+    
     
     print(f"\033[92mArchivo {flags.name} recibido! Guardando en {flags.dst + flags.name}")
     
@@ -62,13 +69,9 @@ def download(flags: downloader_flags):
 
 
 def main():
-    # TODO: Hacer que ande con las flags
-    # por ahora lo hacemos asi para que ande
     flags = downloader_flags()
     i = 1
-    print(argv)
     while i < len(argv):
-        print(f'argv[i] = {argv[i]}')
         if  argv[i] == ClientFlags.HELP.value or argv[i] == ClientFlags.HELPL.value:
             print(
                 "usage : download [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - d FILEPATH ] [ - n FILENAME ]\n\n"
@@ -120,6 +123,7 @@ def main():
             print(f"Flag {argv[i]} no reconocida")
             return
 
+    start = time.time()  
     download(flags)
-    
+    pretty_print(f"Tiempo de descarga: {(time.time() - start):.2f} segundos", flags.verbosity)
 main()
