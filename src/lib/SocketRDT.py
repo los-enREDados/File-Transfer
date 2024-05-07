@@ -248,16 +248,17 @@ class SocketRDT:
         return True
 
     def sendall(self, mensaje:bytes):
-        # cant
-
-
         if mensaje == None:
             self.error = 1
             mensaje = b"ERROR"
+
+        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
+        cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
+
         if self.protocolo == "SW":
-            self._sendall_stop_and_wait(mensaje) #
+            self._sendall_stop_and_wait(mensaje, cantPaquetesAenviar) 
         else:
-            self._sendall_selective(mensaje) #
+            self._sendall_selective(mensaje, cantPaquetesAenviar) 
         return
 
     def receive_all(self, ):
@@ -286,11 +287,11 @@ class SocketRDT:
 
         return seqNumRecibido == seqNum
 
-    def _sendall_stop_and_wait(self, mensaje: bytes):
+    def _sendall_stop_and_wait(self, mensaje: bytes, cantPaquetesAenviar:int):
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
 
-        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
-        cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
+        # cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
+        # cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
         print(f"Cantidad de paquetes a enviar {cantPaquetesAenviar}")
 
@@ -321,7 +322,7 @@ class SocketRDT:
                 else:
                     continue   
             
-                print_loading_bar(seqNum / cantPaquetesAenviar)
+                if self.tipo == lib.constants.UPLOAD:  print_loading_bar(ack_pkt / cantPaquetesAenviar)
                 
             except TimeoutError:
                 continue
@@ -497,10 +498,10 @@ class SocketRDT:
                 ventana = [nuevoComienzoVentana, nuevoFin]
         return listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo
     
-    def _sendall_selective(self, mensaje: bytes):
+    def _sendall_selective(self, mensaje: bytes, cantPaquetesAenviar:int):
 
-        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
-        cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
+        # cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
+        # cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
         tamanoVentana = calculate_window_size(cantPaquetesAenviar)
 
@@ -547,7 +548,8 @@ class SocketRDT:
 
             listaDeTimeouts, cantidadDePaquetesACKs, ventana, envieTodo = self._recibir_paquetes_sender_SR(listaDeTimeouts, cantidadDePaquetesACKs, ventana, cantPaquetesAenviar, tamanoVentana, envieTodo)
 
-            print_loading_bar(cantidadDePaquetesACKs / cantPaquetesAenviar)
+            if self.tipo == lib.constants.UPLOAD:  print_loading_bar(cantidadDePaquetesACKs / cantPaquetesAenviar)
+
 
 
         self._send_fin(seqNumActual, cantPaquetesAenviar)
@@ -641,15 +643,6 @@ class SocketRDT:
 
 
 def print_loading_bar(percentage, bar_length=20, fill_char='█', empty_char='-'):
-  """
-  Prints a progress bar to the console with a given percentage.
-
-  Args:
-      percentage (float): The percentage of completion (0.0 to 1.0).
-      bar_length (int, optional): The length of the progress bar. Defaults to 20.
-      fill_char (str, optional): The character to fill the completed portion. Defaults to '█'.
-      empty_char (str, optional): The character to fill the remaining portion. Defaults to '-'.
-  """
   filled_length = int(round(bar_length * percentage))
   filled_bar = fill_char * filled_length
   empty_bar = empty_char * (bar_length - filled_length)
