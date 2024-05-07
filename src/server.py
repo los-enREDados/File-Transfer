@@ -1,6 +1,5 @@
 import sys
 import socket
-# import struct
 import os
 
 import lib.SocketRDT 
@@ -244,6 +243,9 @@ def __main__():
 
         elif argv[i] == ServerFlags.STORAGE.value:
             flags.stge = argv[i+1]
+            if os.path.isdir(flags.stge) == False:
+                print(f"El directorio {flags.stge} no existe")
+                return
             i += 2
 
     if lib.constants.TIPODEPROTOCOLO != "SW" and lib.constants.TIPODEPROTOCOLO != "SR":

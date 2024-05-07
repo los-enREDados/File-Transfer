@@ -39,7 +39,7 @@ def mandarArchivo(serverSCK: SocketRDT, archivoNombre: str):
 
     return 
 
-def recibirArchivo(serverSCK: SocketRDT, pathDelArchivoADescargar: str):
+def recibirArchivo(serverSCK: SocketRDT):
     
     downloaded_file = serverSCK.receive_all()
    

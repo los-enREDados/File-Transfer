@@ -1,3 +1,4 @@
+import os
 from lib.SocketRDT import SocketRDT
 from lib.constants import ClientFlags
 import lib.ProtocoloFS
@@ -21,6 +22,8 @@ class uploader_flags:
         self.host = lib.constants.DEFAULT_SERVER_IP
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
+        self.src = ""
+        self.name = ""
         
 
 def upload(flags):
@@ -103,10 +106,16 @@ def main():
 
         elif argv[i] == ClientFlags.SRC.value or argv[i] == ClientFlags.SRCL.value:
             flags.src = argv[i+1]
+            if os.path.isdir(flags.src) == False:
+                print(f"El directorio {flags.src} no existe")
+                return
             i += 2
 
         elif argv[i] == ClientFlags.NAME.value or argv[i] == ClientFlags.NAMEL.value:
             flags.name = argv[i+1]
+            if os.path.isfile(flags.src+flags.name) == False:
+                print(f"El archivo {flags.src+flags.name} no existe")
+                return
             i += 2
 
         else:
@@ -121,4 +130,3 @@ if __name__ == "__main__":
     main()
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Elapsed time: {elapsed_time:.2f} seconds")

@@ -4,6 +4,7 @@ import lib.ProtocoloFS
 from sys import argv
 from lib.constants import ClientFlags
 import lib.constants
+import os
 
 class downloader_flags:
     verbosity: bool
@@ -43,7 +44,7 @@ def download(flags: downloader_flags):
     print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}")
 
     try :
-        archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
+        archivo = lib.ProtocoloFS.recibirArchivo(serverSCK)
     except ConnectionTimedOutError as e:
         print(e)
         return
@@ -87,6 +88,7 @@ def main():
 
         elif argv[i] == ClientFlags.QUIET.value or argv[i] == ClientFlags.QUIETL.value:
             flags.verbosity = lib.constants.QUIET
+        
             i += 1
 
         elif argv[i] == ClientFlags.HOST.value or argv[i] == ClientFlags.HOSTL.value:
@@ -103,6 +105,9 @@ def main():
 
         elif argv[i] == ClientFlags.DST.value or argv[i] == ClientFlags.DSTL.value:
             flags.dst = argv[i+1]
+            if os.path.isdir(flags.dst) == False:
+                print(f"El directorio {flags.dst} no existe")
+                return
             i += 2
 
         elif argv[i] == ClientFlags.NAME.value or argv[i] == ClientFlags.NAMEL.value:
