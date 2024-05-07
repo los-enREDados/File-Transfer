@@ -1,7 +1,8 @@
 #!/bin/sh
-WSPLUGINDIR=~/.local/lib/wireshark/plugins
+WSPLUGINDIR=${HOME}/.local/lib/wireshark/plugins
 
-mkdir ${WSPLUGINDIR} || true
+
+mkdir -p ${WSPLUGINDIR} || true
 dirTP=$(pwd)
 cd ${WSPLUGINDIR}
 ln -s ${dirTP}/plugin.lua .
