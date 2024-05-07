@@ -12,7 +12,7 @@
   \vspace*{1cm}
 
   \begin{center}
-    {\Huge{Trabajo Práctico 1: Reliable File Transfer usnado UDP}}
+    {\Huge{Trabajo Práctico 1: Reliable File Transfer usando UDP}}
   \end{center}
 
   \vspace{0.4cm}
@@ -37,13 +37,13 @@
         \begin{center}
           Demarchi, Ignacio\\
           {\small{Padrón: 107835}}\\
-          {\small{email: PONER MAIl}}\\
+          {\small{email: idemarchi@fi.uba.ar}}\\
         \end{center}
       \end{minipage}\begin{minipage}{.5\textwidth}
         \begin{center}
           Lijs, Theo\\
           {\small{Padrón: 109472}}\\
-          {\small{email: PONER MAIL}}
+          {\small{email: tlijs@fi.uba.ar}}
         \end{center}
       \end{minipage}}
 
@@ -53,7 +53,7 @@
         \begin{center}
           Schneider, Valentin\\
           {\small{Padrón: 107964}}\\
-          {\small{email: PONER MAIL}}\\
+          {\small{email: vschneider@fi.uba.ar}}\\
         \end{center}
       \end{minipage}\begin{minipage}{.5\textwidth}
         \begin{center}
@@ -208,15 +208,15 @@ A nivel mensaje, cada archivo se parte en varios paquetes. Cada paquete tiene co
   Flag de error
 \end{itemize}
 
-Los otros 504 bytes son dedicados al payload. Notar que el sequence number se utiliza tambien como campo para el acknowledge
+Los otros 504 bytes son dedicados al payload. Notar que el sequence number se utiliza también como campo para el acknowledge
 
 Durante el handshake, la flag de conexión está encendida y el cliente indica el tipo de conexión con la flag de tipo. El servidor responde con un paquete que posee en su payload el puerto con el cual el cliente tiene que seguir la conversación. El cliente responde con un acknowledge final, indicando que recibió el puerto y que la conexión fue exitosa. En caso de timeouts, se asume que la conexión fue exitosa y se procede con la transferencia de archivos.
 
-Cuando comienza el envío de información la flag de conexión se pone en 0. Luego se envian los paquetes con la tira de bytes del mismo en el payload con su sequence number correspondiente. El servidor responde con un acknowledge del paquete recibido. 
+Cuando comienza el envío de información la flag de conexión se pone en 0. Luego se envían los paquetes con la tira de bytes del mismo en el payload con su sequence number correspondiente. El servidor responde con un acknowledge del paquete recibido. 
 
-Cuando la información termina, se enciende la flag de FIN y se envía un paquete con la flag de FIN encendida. El servidor responde con un acknowledge final. En caso de perdida del acknowledge final, al haber recibido todos los acknowledges anteriores correctamente se sabe que se reecibio todo correctamente por lo que se sigue de largo. 
+Cuando la información termina, se enciende la flag de FIN y se envía un paquete con la flag de FIN encendida. El servidor responde con un acknowledge final. En caso de perdida del acknowledge final, al haber recibido todos los acknowledges anteriores correctamente se sabe que se recibió todo correctamente por lo que se sigue de largo. 
 
-En caso de que haya un error en la comunicación, se enciende la flag de error y la comunicación y se envia un paquete vacio. Cuando se detecta un paquete con un error se levanta la excepción y se termina la comunicación.
+En caso de que haya un error en la comunicación, se enciende la flag de error y la comunicación y se envía un paquete vació. Cuando se detecta un paquete con un error se levanta la excepción y se termina la comunicación.
 
 \subsection{\texorpdfstring{\textbf{4. La capa de transporte del stack TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado utilizar cada uno?}}{4. La capa de transporte del stack TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado utilizar cada uno?}}\label{la-capa-de-transporte-del-stack-tcpip-ofrece-dos-protocolos-tcp-y-udp.-quuxe9-servicios-proveen-dichos-protocolos-cuuxe1les-son-sus-caracteruxedsticas-cuuxe1ndo-es-apropiado-utilizar-cada-uno}
 
@@ -240,7 +240,7 @@ En caso de que haya un error en la comunicación, se enciende la flag de error y
 \item
   \textbf{No hay confiabilidad:} no se garantiza la entrega de datos, ni el orden en que lleguen
 \item
-  \textbf{Envío de datos sin conexión}: no se establece una conexión antes de enviar datos, el cliente directamente le envia paquetes al server, (que pueden llegar o no) y el servidor puede contestar o no.
+  \textbf{Envío de datos sin conexión}: no se establece una conexión antes de enviar datos, el cliente directamente le envía paquetes al server, (que pueden llegar o no) y el servidor puede contestar o no.
 \item
   Tiene una \textbf{menor complejidad} que TCP, ya que tiene menor cantidad de tareas que procesar. Además, al no preocupar se por garantizar la entrega de datos confiable, se consigue una mejor latencia que TCP.
 \item
@@ -252,8 +252,8 @@ encontradas}}{Dificultades encontradas}}\label{dificultades-encontradas}
 
 Una de las principales dificultades que encontramos fue lograr que el handshake fuese reliable debido al problema de los dos generales.
 
-Para solucionar esto tuvimos que asumir que despues de n perdidas seguidas, la conexion fue exitosa; y que simplemente se perdio el acknowledge final. Del lado del cliente entonces, se envia este acknowledge una sola vez (sin verifiacion de un recibimiento). 
-En caso de que el handshake no fue exitoso, tendriamos un error de timeout a la hora de envio o recibimiento del archivo.
+Para solucionar esto tuvimos que asumir que después de n perdidas seguidas, la conexión fue exitosa; y que simplemente se perdió el acknowledge final. Del lado del cliente entonces, se envia este acknowledge una sola vez (sin verificación de un recibimiento). 
+En caso de que el handshake no fue exitoso, tendríamos un error de timeout a la hora de envió o recibimiento del archivo.
 
 Otro problema del handshake, es que no se podía crear el socket en el puerto antes de terminar el handshake. Esto se debía a que, si se perdía el paquete de synack, el cliente no iba a poder saber el nuevo puerto con el que tiene que hablar e iba a saltar timeout. La resolución de esto fue tratar el handshake en el puerto del servidor.
 
