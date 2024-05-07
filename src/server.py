@@ -82,7 +82,6 @@ class Server:
         def check_dead(self):
             deads = []
             for conexion in self.conexiones.values():
-                print(f"Chequeando conexion {conexion.id}")
                 if not conexion.estado.estado:
                     print(f"Conexion {conexion.id} ha muerto")
                     deads.append(conexion.id)
@@ -135,14 +134,12 @@ class Server:
 class worker: 
     def __init__(self, socketRDT, paquete, storage): 
         self.socketRDT = socketRDT
-        self.paquete = paquete
         self.addressCliente = socketRDT.peerAddr
         self.nombre = bytesAstr(paquete.getPayload())
         self.tipo = paquete.tipo
         self.id = socketRDT.peerAddr[1]
         self.estado = State()
-        self.storage = storage
-        self.thread = threading.Thread(target=work, args=(self.socketRDT, self.paquete, self.estado, self.storage))
+        self.thread = threading.Thread(target=work, args=(self.socketRDT, paquete, self.estado, storage))
 
     def run(self):
         try :
@@ -154,11 +151,14 @@ class worker:
     def join(self):
         self.thread.join()
 
-def work(socketRDT, paquete, state, stge):
+def work(socketRDT, paquete, state, storage):
     addressCliente = socketRDT.peerAddr
     nombre = bytesAstr(paquete.getPayload())
     print(nombre)
     tipo = paquete.tipo
+    # NOTE: Si no tiene el "/" final, se la anado
+    if storage[-1] != "/":
+        storage += "/"
 
     if tipo == lib.constants.UPLOAD:
 
@@ -175,9 +175,9 @@ def work(socketRDT, paquete, state, stge):
     
         print("\033[92mArchivo Recibido!\033[0m")
 
-        print(stge)
+        print(storage)
         print(nombreArchivo)
-        with open(stge + nombreArchivo, "wb") as file:
+        with open(storage + nombreArchivo, "wb") as file:
             file.write(archivo_recibido) # Añadir modo (verbose, quiet)
 
         print(f'Cambiando estado de {addressCliente} a False')
@@ -185,12 +185,11 @@ def work(socketRDT, paquete, state, stge):
 
 
     elif tipo == lib.constants.DOWNLOAD:
-        stge = "data/server/"
-      
+
         try: 
-            print(f"\033[93mEnviando {stge} + {nombre} a {addressCliente}...\033[0m")
+            print(f"\033[93mEnviando {storage}/{nombre} a {addressCliente}...\033[0m")
             
-            with open(stge + nombre, "rb") as file:
+            with open(storage + nombre, "rb") as file:
                 archivo = file.read()    
                 try: 
                     socketRDT.sendall(archivo)
@@ -251,3 +250,9 @@ def __main__():
     server.start()
 
 __main__()
+
+'''
+Ips y puertos default y custom
+paths default y custom
+verbose y quiet
+'''

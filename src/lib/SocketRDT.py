@@ -278,7 +278,7 @@ class SocketRDT:
     def _sendall_stop_and_wait(self, mensaje: bytes):
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
 
-        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAQUETE
+        cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
         seqNum = 0

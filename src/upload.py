@@ -17,7 +17,7 @@ class uploader_flags:
     name: str
 
     def __init__(self):
-        self.verbosity = Verbosity.Verbose
+        self.verbosity = Verbosity.VERBOSE.value
         self.host = lib.constants.DEFAULT_SERVER_IP
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
@@ -49,8 +49,11 @@ def upload(flags):
        serverSCK.connect(lib.constants.UPLOAD, flags.name)
     except ConnectionTimedOutError as e:
        print(e)
-        
-    lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+"/"+flags.name)
+    
+    # NOTE: Si no tiene el "/" final, se la anado
+    if flags.src[-1] != "/":
+        flags.src += "/"
+    lib.ProtocoloFS.mandarArchivo(serverSCK, flags.src+flags.name)
 
 def main():
     flags = uploader_flags()

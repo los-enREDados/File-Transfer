@@ -40,10 +40,11 @@ def download(flags: downloader_flags):
     archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
 
     print(f"\033[92mArchivo {flags.name} recibido! Guardando en {flags.dst + flags.name}")
- 
+    
+    if flags.dst[-1] != "/":
+        flags.dst += "/"
     with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)
-
 
 def main():
     # TODO: Hacer que ande con las flags
