@@ -24,6 +24,7 @@ class uploader_flags:
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
         self.src = ""
         self.name = ""
+
         
 
 def upload(flags):
@@ -106,22 +107,24 @@ def main():
 
         elif argv[i] == ClientFlags.SRC.value or argv[i] == ClientFlags.SRCL.value:
             flags.src = argv[i+1]
-            if os.path.isdir(flags.src) == False:
-                print(f"El directorio {flags.src} no existe")
-                return
             i += 2
 
         elif argv[i] == ClientFlags.NAME.value or argv[i] == ClientFlags.NAMEL.value:
             flags.name = argv[i+1]
-            if os.path.isfile(flags.src+flags.name) == False:
-                print(f"El archivo {flags.src+flags.name} no existe")
-                return
             i += 2
 
         else:
             print(f"Flag {argv[i]} no reconocida")
             return
 
+
+    if os.path.isdir(flags.src) == False:
+        print(f"El directorio {(flags.src)} no existe")
+        return
+
+    if os.path.isfile(flags.src+flags.name) == False:
+        print(f"El archivo {flags.src+flags.name} no existe")
+        return
             
     upload(flags)
 
