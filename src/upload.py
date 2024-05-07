@@ -56,6 +56,7 @@ def upload(flags):
        serverSCK.connect(lib.constants.UPLOAD, flags.name)
     except ConnectionTimedOutError as e:
        print(e)
+       return
     
     # NOTE: Si no tiene el "/" final, se la anado
     try :
@@ -65,7 +66,10 @@ def upload(flags):
     except AttributeError:
         print("Por favor ingrese el archivo a subir con -n y el path con -s")
     except ConnectionTimedOutError:
-        print("Connection Timed Out ")
+        print("\nConnection Timed Out ")
+        return
+
+    print(f" Archivo {flags.name} subido con exito")
 
 def main():
     flags = uploader_flags()

@@ -3,12 +3,6 @@ import sys
 import math
 import datetime
 import struct
-from enum import Enum
-
-# class Tipo(Enum):
-#     UPLOAD = 1
-#     DOWNLOAD = 2
-
 import lib.constants
 
 class ConnectionTimedOutError(Exception):
@@ -142,16 +136,13 @@ class SocketRDT:
     def acceptConnection(self):
         self.skt.settimeout(2)
         mensajeConeccion = b""
-
         paquete = None
 
-        # Voy a pedir conecciones hasta que alguien me mande el SYN
         try: 
             paquete_recibido, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE)
             paquete = Paquete.Paquete_from_bytes(paquete_recibido)
             mensajeConeccion = paquete.connect
             print(f"Recibi {mensajeConeccion} mensaje de {addr}")
-
 
         except TimeoutError:
             raise ConnectionAttemptTimedOutError()
@@ -160,23 +151,14 @@ class SocketRDT:
 
 
     def syncAck(self, puertoNuevo: int, socketRDT, paqueteRecibido):
-        # Este mensaje podria ser mas corto o no estar directamente
-        # Solo necesitamos mandarle esto para que reciba la direccion
-        # mensaje = lib.constants.MENSAJEACEPTARCONECCION
         datos = intAUint32(puertoNuevo)
-
-        tipoConexion = paqueteRecibido.tipo
-        paquete = Paquete(0, lib.constants.CONNECT, tipoConexion, 0, 0, datos)
-        # print(type(mensaje))
-
+        paquete = Paquete(0, lib.constants.CONNECT, paqueteRecibido.tipo, 0, 0, datos)
         
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
-        maxTimeouts = 4
         timeouts = 0 
         while True:
             try: 
                 # Si me llego este mensaje significa que NO LE LLEGO. 
-                print("Viendo si recibo algo en synACK")
                 self.skt.sendto(paquete.misBytes, socketRDT.peerAddr)
                 paquete_bytes, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE)
 
@@ -184,16 +166,13 @@ class SocketRDT:
 
                 if addr != socketRDT.peerAddr: continue
 
-                  
                 if paquete_recibido.connect == lib.constants.CONNECT and paquete_recibido.fin == lib.constants.FIN:
-                    _, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE)
-                    print("syncACK(): confirmacion de conexion")
+                    # _, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) #To empty
                     break
 
             except TimeoutError:
                 timeouts += 1
-                if timeouts >= maxTimeouts:
-                    print("syncACK(): Asumo que llego")
+                if timeouts >= lib.constants.MAXTIMEOUTS_SENDER:
                     break
             
             
@@ -204,45 +183,32 @@ class SocketRDT:
         paquete = Paquete(0, lib.constants.CONNECT, tipo, lib.constants.NOFIN, 0, msg_bytes)
         
         self.skt.settimeout(lib.constants.TIMEOUTCONNECT)
+
         nuevoPuerto = b""
         addr = 0
-
+        paqueteRecibido = None
         timeouts = 0
         maxTimeouts = 100
 
         while True:
             try: 
-                #print("connect() enviando SYN")
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
                 
                 paqueteRecibido, addr = self.skt.recvfrom(lib.constants.TAMANOPAQUETE) 
                 if addr[0] != self.peerAddr[0]:
-                    print("Contesto otro server")
                     raise ValueError("Se conecto a otro servidor")
-
                 break
 
             except TimeoutError:
-                # Volver a ejecutar
-                timeouts += 1
-                if (timeouts >= maxTimeouts):
-                    raise ConnectionTimedOutError("CONNECTION TIMED OUT")
-                print("TIMEOUT")
-                pass
+                timeouts = update_timeouts_counter(timeouts, maxTimeouts)
         
         paqueteRecibido = Paquete.Paquete_from_bytes(paqueteRecibido)
-        #print(f'paquete recibido en syn: {paqueteRecibido.getPayload()} , {len(paqueteRecibido.getPayload())}')
-
         nuevoPuerto = uint32Aint(paqueteRecibido.getPayload())
         print (f"Nuevo puerto recibido en connect: {nuevoPuerto}")
 
         paquete_fin = Paquete(0, lib.constants.CONNECT, tipo, lib.constants.FIN, 0, b"")
-
-
         self.skt.sendto(paquete_fin.misBytes, self.peerAddr)
-
         self.peerAddr = (self.peerAddr[lib.constants.IPTUPLA], nuevoPuerto)
-
         self.skt.settimeout(None)
 
         return True
@@ -259,7 +225,7 @@ class SocketRDT:
             self._sendall_stop_and_wait(mensaje, cantPaquetesAenviar) 
         else:
             self._sendall_selective(mensaje, cantPaquetesAenviar) 
-        return
+
 
     def receive_all(self, ):
         if self.protocolo == "SW":
@@ -290,11 +256,7 @@ class SocketRDT:
     def _sendall_stop_and_wait(self, mensaje: bytes, cantPaquetesAenviar:int):
         self.skt.settimeout(lib.constants.TIMEOUTSENDER)
 
-        # cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
-        # cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
-
-        print(f"Cantidad de paquetes a enviar {cantPaquetesAenviar}")
-
+        timeouts = 0
         seqNum = 0
         while seqNum < cantPaquetesAenviar:
            
@@ -308,24 +270,19 @@ class SocketRDT:
 
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
-                # Recibimos el ACK de que el paquete llego
-                # Aca puede quedar bloqueado hasta que salte el timeout
                 paquete_ack = self._recieve()
                 if paquete_ack == None:
                     continue
 
                 ack_pkt = paquete_ack.getSequenceNumber()
-                
                 if self._pkt_sent_ok(ack_pkt, seqNum):
+                    timeouts = 0
                     seqNum += 1
-
-                else:
-                    continue   
             
                 if self.tipo == lib.constants.UPLOAD:  print_loading_bar(ack_pkt / cantPaquetesAenviar)
                 
             except TimeoutError:
-                continue
+                timeouts = update_timeouts_counter(timeouts, lib.constants.MAXTIMEOUTS_SENDER)
 
         self._send_fin(seqNum, cantPaquetesAenviar)    
         return
@@ -336,6 +293,7 @@ class SocketRDT:
 
         es_fin = False
         ultimoSeqNumACK = -1
+        timeouts = 0
         while not es_fin:
             try :
                 paquete = self._recieve()
@@ -369,8 +327,10 @@ class SocketRDT:
 
                 self.skt.sendto(paqueteAck.misBytes, self.peerAddr)
 
-            except TimeoutError:
-                raise ConnectionTimedOutError("CONNECTION TIMED OUT")
+            except TimeoutError as e:
+                print(e)
+                print(timeouts)
+                timeouts = update_timeouts_counter(timeouts, lib.constants.MAXTIMEOUTS)
         
         self.skt.settimeout(None)
         return mensajeFinal
@@ -381,7 +341,6 @@ class SocketRDT:
         seq_number_perdido = -1
         for i in range(ventana[0], ventana[1] + 1):
             celda = lista_de_timeouts_actualizada[i]
-            seq_number = i
             tiempo_de_envio = celda.tiempoDeEnvio
             # Si todavia no tiene envio, no hago nada
             if tiempo_de_envio == None:
@@ -446,17 +405,14 @@ class SocketRDT:
         # print( f"mensaje inicial: {indiceInicial} mensaje final: {indiceFinal} payload: {payloadActual}")
 
         paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, self.error, payloadActual)
-
         self.skt.sendto(paquete.misBytes, self.peerAddr)
-
-        lista_de_timeoutes_actualizada = list_de_timeouts
 
 
         tiempoActual =  datetime.datetime.now()
-        lista_de_timeoutes_actualizada[seqNum] = CeldaSR(tiempoActual, False)
+        list_de_timeouts[seqNum] = CeldaSR(tiempoActual, False)
 
         pudeEnviar = True
-        return lista_de_timeoutes_actualizada, pudeEnviar
+        return list_de_timeouts, pudeEnviar
 
     def _actualiza_acks_sr(self, listaDeTimeouts, seqNumRecibido, cantidadDeACKS):
         lista_de_timeoutes_actualizada = listaDeTimeouts
@@ -500,9 +456,6 @@ class SocketRDT:
     
     def _sendall_selective(self, mensaje: bytes, cantPaquetesAenviar:int):
 
-        # cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
-        # cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
-
         tamanoVentana = calculate_window_size(cantPaquetesAenviar)
 
         ventana = [0, tamanoVentana - 1]
@@ -516,7 +469,6 @@ class SocketRDT:
 
         self.skt.setblocking(False)
 
-        print(f"Cantidad de paquetes a enviar {cantPaquetesAenviar}")
         envieTodo = False
         while envieTodo == False:
             huboTimeout = False
@@ -526,8 +478,6 @@ class SocketRDT:
 
             if seqNumPerdido != -1:
                 timemouts_seguidos += 1
-                print(f'largo de la ventana: {ventana[1] - ventana[0]}')
-                print(f'timeouts seguidos: {timemouts_seguidos}')
                 seqNumAEnviar = seqNumPerdido
                 huboTimeout = True
 
@@ -537,7 +487,7 @@ class SocketRDT:
                     timemouts_seguidos = 0
                     seqNumActual += 1
 
-            if timemouts_seguidos > cantPaquetesAenviar :
+            if timemouts_seguidos > tamanoVentana :
                 raise ConnectionTimedOutError("CONNECTION TIMED OUT")
 
             listaDeTimeouts, pudeEnviar = self._enviar_paquete_SR(mensaje, seqNumAEnviar, listaDeTimeouts, cantPaquetesAenviar, ventana, cantidadDePaquetesACKs)
@@ -557,25 +507,20 @@ class SocketRDT:
         print("TERMINE DE MANDAR")
 
     def _receive_selective(self,):
-        # "sequence number" : "payload"
         mensajeFinal = {}
-
         cant_recibidos = 0
         seq_num_de_fin = None
-
-        maxTimeouts = 4
         timeouts = 0
         self.skt.settimeout(lib.constants.TIMEOUTRECEIVER)
         while True:
             try:
                 if seq_num_de_fin != None and cant_recibidos == seq_num_de_fin + 1:
-                    print(f"Cantidad de recibidos: {cant_recibidos}")
                     break
 
                 paquete = self._recieve()
                 if paquete == None or paquete.tipo != self.tipo or lib.constants.NOCONNECT != paquete.connect or lib.constants.NOERROR != paquete.error:
                     continue #drop
-
+                timeouts = 0
                 seqNumRecibido = paquete.getSequenceNumber()
 
                 if paquete.error == 1:# and paquete.tipo == lib.constants.DOWNLOAD:
@@ -598,16 +543,13 @@ class SocketRDT:
                     cant_recibidos += 1
 
             except TimeoutError:
-                timeouts += 1
-                if timeouts == maxTimeouts:
-                    raise ConnectionTimedOutError("CONNECTION TIMED OUT")
-
-
+                timeouts = update_timeouts_counter(timeouts, lib.constants.MAXTIMEOUTS_RECIEVER)
 
         mensaje = bytearray()
         for i in range(cant_recibidos):
             mensaje.extend(mensajeFinal[i])
          
+        self.skt.settimeout(lib.constants.TIMEOUTRECEIVER)
         return mensaje 
 
     def _send_fin(self, seqNumActual, cantPaquetesAenviar):
@@ -632,11 +574,11 @@ class SocketRDT:
 
                 if seqNumRecibido == seqNumActual + 1:
                     break
+        
             except TimeoutError:
                 timeoutCount += 1
                 if timeoutCount > maxTimeouts:
                     break # No rompemos ya que sabemos que llego toda la informacion
-                pass
 
         self.skt.settimeout(None)  
 
@@ -662,3 +604,9 @@ def calculate_window_size(cantPaquetesAenviar):
     return value
 
 
+def update_timeouts_counter(timeouts, max_timeouts):
+    # print(f'timeouts actuales {timeouts}')
+    timeouts += 1
+    if timeouts >= max_timeouts:
+        raise ConnectionTimedOutError("CONNECTION TIMED OUT")
+    return timeouts

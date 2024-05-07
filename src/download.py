@@ -25,7 +25,11 @@ class downloader_flags:
 def download(flags: downloader_flags):
 
     peerAddres = (flags.host, flags.port)
-    serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.myIp)
+    try:
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, flags.myIp)
+    except OSError as e:
+        print(f"Error al crear el socket. Reasignando Ip al cliente: {lib.constants.DEFAULT_CLIENT_IP}")
+        serverSCK = SocketRDT(lib.constants.TIPODEPROTOCOLO, lib.constants.DOWNLOAD, peerAddres, lib.constants.DEFAULT_CLIENT_IP)
 
     print(f"{lib.constants.BLUE}+------------------------------------------------+")
     print(f"| Hola soy un Cliente y estoy en {lib.constants.YELLOW}{flags.myIp}:{serverSCK.myAddress[1]}\033[94m |")
