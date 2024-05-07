@@ -4,28 +4,28 @@ from enum import Enum
 IPTUPLA = 0
 PUERTOTUPLA = 1
 
-TIPODEPROTOCOLO = "SR" 
+TIPODEPROTOCOLO = "SR"
 
 
-
-MAXFILESIZE = 500000000 # 500 MB
+MAXFILESIZE = 500000000  # 500 MB
 # Estos dos estan en bytes
 
 
 # HEADER
-TAMANONUMERORED = 4 #seq
-TAMANOCONNECT   = 1
-TAMANOTIPO      = 1
-TAMANOFIN       = 1
-TAMANOERROR     = 1
-TAMANOHEADER    = TAMANONUMERORED + TAMANOFIN + TAMANOTIPO + TAMANOCONNECT + TAMANOERROR
+TAMANONUMERORED = 4  # seq
+TAMANOCONNECT = 1
+TAMANOTIPO = 1
+TAMANOFIN = 1
+TAMANOERROR = 1
+TAMANOHEADER = TAMANONUMERORED + TAMANOFIN + \
+    TAMANOTIPO + TAMANOCONNECT + TAMANOERROR
 
-#TOTAL
+# TOTAL
 TAMANOPAYLOAD = 504
 TAMANOPAQUETE = TAMANOPAYLOAD + TAMANOHEADER
 
 
-#CONSTATS
+# CONSTATS
 UPLOAD = 1
 DOWNLOAD = 0
 CONNECT = 1
@@ -40,15 +40,15 @@ PORT = 1
 TAMANOLECTURAARCHIVO = None
 
 # TIMEOUTS
-## CONNECT
+# CONNECT
 TIMEOUTCONNECT = 1
 TIMEOUTACCEPT = 5
-## SEND
+# SEND
 TIMEOUTSENDER = 0.1
 TIMEOUTSENDERSR = 1
 TIEMOUTPORPAQUETESR = 1
 MAXTIMEOUTS_SENDER = 25
-## RECIEVE
+# RECIEVE
 TIMEOUTRECEIVER = 5
 MAXTIMEOUTS_RECIEVER = 4
 ##
@@ -61,14 +61,14 @@ FORMATONATIVO = "=I"
 
 MENSAJECONECCION = b"SYN"
 # ESTOS TIENEN QUE TENER EL MISMO TAMANO... bueno en realidad no.
-# pero hace las cosas ms faciles. 
-#MENSAJEUPLOAD = b"UPL"
+# pero hace las cosas ms faciles.
+# MENSAJEUPLOAD = b"UPL"
 # MENSAJEDOWNLOAD = b"DOW"
 MENSAJEACK = b"ACK"
-MENSAJEACEPTARCONECCION= b"SYNACK"
+MENSAJEACEPTARCONECCION = b"SYNACK"
 
 
-# Packet loss - usar interfaz lo para localhost 
+# Packet loss - usar interfaz lo para localhost
 # sudo tc qdisc add dev <interface_name> root netem delay 0 loss 10%
 
 # Para ver que se haya seteado bien
@@ -84,7 +84,7 @@ class ClientFlags(Enum):
 
     QUIET = "-q"
     QUIETL = "--quiet"
-    
+
     MYIP = "-m"
     MYIPL = "--myIp"
 
@@ -93,10 +93,10 @@ class ClientFlags(Enum):
 
     HOST = "-H"
     HOSTL = "--host"
-        
+
     PORT = "-p"
     PORTL = "--port"
-    
+
     SRC = "-s"
     SRCL = "--src"
 
@@ -105,6 +105,7 @@ class ClientFlags(Enum):
 
     DST = "-d"
     DSTL = "--dst"
+
 
 class ServerFlags(Enum):
     VERBOSE = "-v"
@@ -115,17 +116,18 @@ class ServerFlags(Enum):
     PORT = "-p"
     STORAGE = "-s"
 
+
 VERBOSE = True
 QUIET = False
 
-## SERVER DEFAULT VALUES
+# SERVER DEFAULT VALUES
 DEFAULT_SERVER_IP = "127.0.0.1"
 DEFAULT_SERVER_PORT = 5005
 DEFAULT_SERVER_STORAGE = "data/server"
 DEFAULT_SERVER_VERBOSITY = QUIET
 
 
-### CLIENT DEFAULT VALUES
+# CLIENT DEFAULT VALUES
 DEFAULT_CLIENT_IP = "127.0.0.2"
 DEFAULT_CLIENT_VERBOSITY = QUIET
 
@@ -156,7 +158,8 @@ ENDC = '\033[0m'
 
 """
 
-def pretty_print(mensaje:str, is_verbose:bool):    
+
+def pretty_print(mensaje: str, is_verbose: bool):
     if is_verbose == QUIET:
         return
     print(mensaje)
