@@ -1,4 +1,4 @@
-LOOPBACK    := $(shell ls -l /sys/class/net/ | grep virtual | grep -v docker | awk '{ print $$NF }' | awk -F '/' '{ print $$NF }')
+LOOPBACK    := $(shell ls -l /sys/class/net/ | grep virtual | grep lo | awk '{ print $$NF }' | awk -F '/' '{ print $$NF }')
 PERDIDA     := 10
 ARCHIVO     := azul.jpeg
 INTERPRETER := python3
