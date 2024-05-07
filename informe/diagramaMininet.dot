@@ -1,0 +1,47 @@
+digraph graph_name {
+  graph [
+    charset = "UTF-8";
+    label = "Diagrama mininet",
+    labelloc = "t",
+    labeljust = "c",
+    bgcolor = white,
+    fontcolor = black,
+    fontsize = 40,
+    style = "filled",
+    rankdir = TB,
+    margin = 0.2,
+    splines = spline,
+    ranksep = 1.0,
+    nodesep = 0.9,
+    layout = fdp,
+  ];
+
+  node [
+    fontsize = 40,
+  ];
+  
+
+  edge [
+        fontsize = 40,
+        dir = both
+  ];
+  
+
+  s1[image="images/router.jpg"]
+  h1[image="images/server.jpg"]
+  h2[image="images/computadora.jpg"]
+  h3[image="images/computadora.jpg"]
+  h4[image="images/computadora.jpg"]
+
+  h1 -> s1 
+  h2 -> s1 [label = "10% loss"]
+  h3 -> s1 [label = "40% loss"]
+  h4 -> s1
+  
+
+
+
+  
+  
+
+}

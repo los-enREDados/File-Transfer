@@ -1,0 +1,15 @@
+\contentsline {section}{\numberline {1}\textbf {Introducción}}{2}{section.1}%
+\contentsline {section}{\numberline {2}\textbf {Hipótesis y suposiciones realizadas WIP}}{2}{section.2}%
+\contentsline {section}{\numberline {3}\textbf {Implementación WIP}}{2}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Arquitectura Cliente-Servidor}{2}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}SocketRDT}{3}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Stop and Wait}{3}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Selective Repeat}{3}{subsection.3.4}%
+\contentsline {section}{\numberline {4}\textbf {Pruebas}}{4}{section.4}%
+\contentsline {section}{\numberline {5}\textbf {Mininet}}{4}{section.5}%
+\contentsline {section}{\numberline {6}\textbf {Preguntas a responder}}{5}{section.6}%
+\contentsline {subsection}{\numberline {6.1}\textbf {1. Describa la arquitectura Cliente-Servidor.}}{5}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}\textbf {3. Detalle el protocolo de aplicación desarrollado en este trabajo.}}{5}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}\textbf {4. La capa de transporte del stack TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado utilizar cada uno?}}{6}{subsection.6.3}%
+\contentsline {section}{\numberline {7}\textbf {Dificultades encontradas}}{7}{section.7}%
+\contentsline {section}{\numberline {8}\textbf {Conclusión WIP}}{7}{section.8}%
