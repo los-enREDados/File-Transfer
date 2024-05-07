@@ -41,7 +41,6 @@ class Server:
             ip = flags.host
             port = flags.port
             
-
             self.recieveSocket = SocketRDT(lib.constants.TIPODEPROTOCOLO, None,
                                         (0,0), ip, port)
             self.conexiones = {}
@@ -143,7 +142,7 @@ class worker:
         self.id = socketRDT.peerAddr[1]
         self.estado = State()
         self.thread = threading.Thread(target=work, args=(self.socketRDT, paquete, self.estado, storage))
-
+    
     def run(self):
         try :
             self.thread.start()
@@ -188,22 +187,21 @@ def work(socketRDT, paquete, state, storage):
 
 
     elif tipo == lib.constants.DOWNLOAD:
-
         try: 
-            print(f"\033[93mEnviando {storage}/{nombre} a {addressCliente}...\033[0m")
-            
             with open(storage + nombre, "rb") as file:
                 archivo = file.read()    
-                try: 
-                    socketRDT.sendall(archivo)
-                except Exception as e:
-                    print(f"Murio la conexion con {addressCliente}")
-                    state.estado = False
-                    return
+                print(f"\033[93mEnviando {storage}/{nombre} a {addressCliente}...\033[0m")
+                socketRDT.sendall(archivo)
+
             print(f"\033[92mArchivo {nombre} enviado a {addressCliente}!\033[0m")
 
         except FileNotFoundError:
             print(f"El archivo {nombre} no existe")
+            socketRDT.sendall(None)
+
+        except Exception as e:
+            print(f"Murio la conexion con {addressCliente}")
+            
             
     state.estado = False
 
@@ -247,7 +245,7 @@ def __main__():
                 print(f"El directorio {flags.stge} no existe")
                 return
             i += 2
-
+    
     if lib.constants.TIPODEPROTOCOLO != "SW" and lib.constants.TIPODEPROTOCOLO != "SR":
         sys.exit(f'''
 \033[91mERROR\033[0m: Tipo de protocolo desconocido: {lib.constants.TIPODEPROTOCOLO}''')

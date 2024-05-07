@@ -8,7 +8,7 @@ TIPODEPROTOCOLO = "SW"
 
 
 
-
+MAXFILESIZE = 500000000 # 500 MB
 # Estos dos estan en bytes
 
 

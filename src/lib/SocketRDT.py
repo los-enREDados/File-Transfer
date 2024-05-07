@@ -17,6 +17,9 @@ class ConnectionTimedOutError(Exception):
 class ConnectionAttemptTimedOutError(Exception):
     pass
 
+class PackageError(Exception):
+    pass
+
 # ATTENTION: Ver comentario "STRUCTS" a pie de pagina
 def intAUint32(numero:int) -> bytes:
     numeroEnUint = struct.pack(lib.constants.FORMATORED, numero)
@@ -133,6 +136,8 @@ class SocketRDT:
         self.tipo = tipo
         self.peerAddr = peerAddr
         
+        # 0 == no hubo error
+        self.error = 0
 
     def acceptConnection(self):
         self.skt.settimeout(2)
@@ -243,10 +248,16 @@ class SocketRDT:
         return True
 
     def sendall(self, mensaje:bytes):
+        # cant
+
+
+        if mensaje == None:
+            self.error = 1
+            mensaje = b"ERROR"
         if self.protocolo == "SW":
-            self._sendall_stop_and_wait(mensaje)
+            self._sendall_stop_and_wait(mensaje) #
         else:
-            self._sendall_selective(mensaje)
+            self._sendall_selective(mensaje) #
         return
 
     def receive_all(self, ):
@@ -281,6 +292,8 @@ class SocketRDT:
         cantPaquetesAenviar = len(mensaje) / lib.constants.TAMANOPAYLOAD
         cantPaquetesAenviar = math.ceil(cantPaquetesAenviar)
 
+        print(f"Cantidad de paquetes a enviar {cantPaquetesAenviar}")
+
         seqNum = 0
         while seqNum < cantPaquetesAenviar:
            
@@ -290,7 +303,7 @@ class SocketRDT:
 
                 payloadActual = mensaje[indiceInicial:indiceFinal]
 
-                paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
+                paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, self.error, payloadActual)
 
                 self.skt.sendto(paquete.misBytes, self.peerAddr)
 
@@ -329,6 +342,12 @@ class SocketRDT:
                     continue
         
                 seqNumRecibido = paquete.getSequenceNumber() #5
+
+                if paquete.error == 1:# and paquete.tipo == lib.constants.DOWNLOAD:
+                    print(
+                        "ERROR DE PAQUETE"
+                    )
+                    raise PackageError("")
                 
                 # Agrego mi paquete al mensaje final
                 if seqNumRecibido == ultimoSeqNumACK + 1:
@@ -340,15 +359,15 @@ class SocketRDT:
 
                 es_fin = paquete.fin
                 if paquete.fin:
-                    paquete_fin = Paquete(seqNumRecibido + 1, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, 0, b"")
+                    paquete_fin = Paquete(seqNumRecibido + 1, lib.constants.NOCONNECT, self.tipo, lib.constants.FIN, self.error, b"")
                     self.skt.sendto(paquete_fin.misBytes, self.peerAddr)
                 
                 # Envio ACK
                 seqNumAEnviar = paquete.getSequenceNumber()
-                paqueteAck = Paquete(seqNumAEnviar, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, b"")
+                paqueteAck = Paquete(seqNumAEnviar, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, self.error, b"")
 
                 self.skt.sendto(paqueteAck.misBytes, self.peerAddr)
-                
+
             except TimeoutError:
                 raise ConnectionTimedOutError("CONNECTION TIMED OUT")
         
@@ -425,7 +444,7 @@ class SocketRDT:
         payloadActual = mensaje[indiceInicial:indiceFinal]
         # print( f"mensaje inicial: {indiceInicial} mensaje final: {indiceFinal} payload: {payloadActual}")
 
-        paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, 0, payloadActual)
+        paquete = Paquete(seqNum, lib.constants.NOCONNECT, self.tipo, lib.constants.NOFIN, self.error, payloadActual)
 
         self.skt.sendto(paquete.misBytes, self.peerAddr)
 
@@ -556,6 +575,13 @@ class SocketRDT:
                     continue #drop
 
                 seqNumRecibido = paquete.getSequenceNumber()
+
+                if paquete.error == 1:# and paquete.tipo == lib.constants.DOWNLOAD:
+                    print(
+                        "ERROR DE PAQUETE"
+                    )
+                    raise PackageError("")
+
 
                 print(f"|  Recibi seqNum: {seqNumRecibido}")
 

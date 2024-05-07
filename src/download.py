@@ -1,5 +1,5 @@
 from lib.SocketRDT import SocketRDT
-from lib.SocketRDT import ConnectionTimedOutError
+from lib.SocketRDT import ConnectionTimedOutError, PackageError
 import lib.ProtocoloFS
 from sys import argv
 from lib.constants import ClientFlags
@@ -32,32 +32,30 @@ def download(flags: downloader_flags):
     print(f"| Quiero conectarme con : {flags.host}:{flags.port}           |")
     print("+------------------------------------------------+\033[0m")
 
-    try:
+    try: 
         serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
+        print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}") 
+        archivo = lib.ProtocoloFS.recibirArchivo(serverSCK)
+        
+    except PackageError:
+        print(f"\033[91m Archivo: {flags.name} no existe en el servidor")
+        return  
+    except ConnectionTimedOutError as e:
+        print(e)
+        return
     except AttributeError as e:
         print("Por favor ingrese nombre de archivo con las flags correspondientes\n")
         return
-    except ConnectionTimedOutError as e:
-        print(e)
-        return
-    
-    print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}")
 
-    try :
-        archivo = lib.ProtocoloFS.recibirArchivo(serverSCK)
-    except ConnectionTimedOutError as e:
-        print(e)
-        return
-    # except MissingFileError as e:
-    #     print(e)
-    #     return  
         
+    
     print(f"\033[92mArchivo {flags.name} recibido! Guardando en {flags.dst + flags.name}")
     
     if flags.dst[-1] != "/":
         flags.dst += "/"
     with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)
+
 
 def main():
     # TODO: Hacer que ande con las flags

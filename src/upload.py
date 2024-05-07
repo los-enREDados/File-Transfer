@@ -117,7 +117,8 @@ def main():
             print(f"Flag {argv[i]} no reconocida")
             return
 
-
+    print(f"flags.src = {flags.src}")
+    print(f"flags.name = {flags.name}")
     if os.path.isdir(flags.src) == False:
         print(f"El directorio {(flags.src)} no existe")
         return
@@ -125,6 +126,11 @@ def main():
     if os.path.isfile(flags.src+flags.name) == False:
         print(f"El archivo {flags.src+flags.name} no existe")
         return
+
+    if os.path.getsize(flags.src+flags.name) >= lib.constants.MAXFILESIZE:
+        print(f"El archivo {flags.src+flags.name} es demasiado grande")
+        return
+
             
     upload(flags)
 
