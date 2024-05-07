@@ -1,23 +1,3 @@
-function bytes_to_int(str,endian,signed) -- use length of string to determine 8,16,32,64 bits
-    local t={str:byte(1,-1)}
-    if endian=="big" then --reverse bytes
-        local tt={}
-        for k=1,#t do
-            tt[#t-k+1]=t[k]
-        end
-        t=tt
-    end
-    local n=0
-    for k=1,#t do
-        n=n+t[k]*2^((k-1)*8)
-    end
-    if signed then
-        n = (n > 2^(#t*8-1) -1) and (n - 2^(#t*8)) or n -- if last bit set, negative.
-    end
-    return n
-end
-
-
 local rdt_ft = Proto.new("RDT-FT",  "Reliable File Transfer")
 
 -- rdt_ft.fields = {}
