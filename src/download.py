@@ -25,6 +25,7 @@ class downloader_flags:
 
 
 def download(flags: downloader_flags):
+    start = time.time()  
 
     peerAddres = (flags.host, flags.port)
     try:
@@ -67,6 +68,7 @@ def download(flags: downloader_flags):
     with open(flags.dst + flags.name, "wb") as file:
         file.write(archivo)
 
+    pretty_print(f"Tiempo de descarga: {(time.time() - start):.2f} segundos", flags.verbosity)
 
 def main():
     flags = downloader_flags()
@@ -123,7 +125,6 @@ def main():
             print(f"Flag {argv[i]} no reconocida")
             return
 
-    start = time.time()  
     download(flags)
-    pretty_print(f"Tiempo de descarga: {(time.time() - start):.2f} segundos", flags.verbosity)
+    
 main()

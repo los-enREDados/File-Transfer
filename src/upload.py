@@ -27,6 +27,7 @@ class uploader_flags:
         
 
 def upload(flags):
+    start = time.time()  
 
 
     
@@ -65,6 +66,7 @@ def upload(flags):
         return
 
     print(f" Archivo {flags.name} subido con exito")
+    pretty_print(f"Tiempo de subida: {(time.time() - start):.2f} segundos", flags.verbosity)
 
 def main():
     flags = uploader_flags()
@@ -128,13 +130,8 @@ def main():
         print(f"El archivo {flags.src+flags.name} es demasiado grande")
         return
 
-    start = time.time()  
     upload(flags)
-    pretty_print(f"Tiempo de subida: {(time.time() - start):.2f} segundos", flags.verbosity)
 
 
 if __name__ == "__main__":
-    start_time = time.time()
     main()
-    end_time = time.time()
-    elapsed_time = end_time - start_time
