@@ -42,8 +42,15 @@ def download(flags: downloader_flags):
     
     print(f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}")
 
-    archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
-
+    try :
+        archivo = lib.ProtocoloFS.recibirArchivo(serverSCK, flags.name)
+    except ConnectionTimedOutError as e:
+        print(e)
+        return
+    # except MissingFileError as e:
+    #     print(e)
+    #     return  
+        
     print(f"\033[92mArchivo {flags.name} recibido! Guardando en {flags.dst + flags.name}")
     
     if flags.dst[-1] != "/":
@@ -75,11 +82,11 @@ def main():
                 )
             return
         elif argv[i] == ClientFlags.VERBOSE.value or argv[i] == ClientFlags.VERBOSEL.value:
-            flags.verbosity = Verbosity.VERBOSE 
+            flags.verbosity = lib.constants.VERBOSE
             i += 1
 
         elif argv[i] == ClientFlags.QUIET.value or argv[i] == ClientFlags.QUIETL.value:
-            flags.verbosity = Verbosity.QUIET
+            flags.verbosity = lib.constants.QUIET
             i += 1
 
         elif argv[i] == ClientFlags.HOST.value or argv[i] == ClientFlags.HOSTL.value:

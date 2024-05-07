@@ -6,12 +6,11 @@ import os
 import lib.SocketRDT 
 
 class server_state_flags:
-    verbosity: lib.constants.Verbosity
+    verbosity: bool
     host: str
     port: int
     stge: str
     name: str
-    verbose: bool
 
     def __init__(self):
         self.verbosity = lib.constants.DEFAULT_SERVER_VERBOSITY
@@ -25,7 +24,7 @@ from lib.SocketRDT import SocketRDT, bytesAstr, uint32Aint , ConnectionTimedOutE
 import lib.ProtocoloFS
 import lib.constants
 from lib.constants import IP, PORT
-from lib.constants import ServerFlags, Verbosity
+from lib.constants import ServerFlags
 import threading
 from sys import argv
 
@@ -90,8 +89,13 @@ class Server:
                 self.conexiones.pop(id)
 
         def listen(self, seguir_corriendo):
+            mensaje = f"Escuchando conexiones en {self.recieveSocket.myAddress[0]}:{self.recieveSocket.myAddress[1]}..."
+
+            print(mensaje)
             while seguir_corriendo.estado:
-                print(f"Escuchando conexiones en \033[93m{self.recieveSocket.myAddress[0]}:{self.recieveSocket.myAddress[1]}\033[0m...")
+                
+                lib.constants.pretty_print(mensaje, self.flags.verbose)                
+                
                 try: 
                     paquete, addr  = self.recieveSocket.acceptConnection() # Añadir modo (verbose, quiet)
                     if (not paquete or addr[1] in self.conexiones):
@@ -223,11 +227,11 @@ def __main__():
                 )
             return
         elif argv[i] == ServerFlags.VERBOSE.value:
-            flags.mode = Verbosity.VERBOSE
+            flags.verbosity = lib.constants.VERBOSE
             i += 1
 
         elif argv[i] == ServerFlags.QUIET.value:
-            flags.mode = Verbosity.QUIET
+            flags.verbosity = lib.constants.QUIET
             i += 1
 
         elif argv[i] == ServerFlags.HOST.value:
@@ -253,6 +257,8 @@ __main__()
 
 '''
 Ips y puertos default y custom Chequeadisimo
-paths default y custom
+paths default y custom Chequeadisimo
 verbose y quiet
+
+opcional: que el server le avise al cliente cuando el archivo no exista, en vez de timeout
 '''

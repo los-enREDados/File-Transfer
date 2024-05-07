@@ -1,5 +1,5 @@
 from lib.SocketRDT import SocketRDT
-from lib.constants import ClientFlags, Verbosity
+from lib.constants import ClientFlags
 import lib.ProtocoloFS
 from sys import argv
 from lib.SocketRDT import ConnectionTimedOutError
@@ -9,7 +9,7 @@ import time
 
 
 class uploader_flags:
-    verbosity: Verbosity
+    verbosity: bool
     host: str
     port: int
     myIp: str
@@ -17,7 +17,7 @@ class uploader_flags:
     name: str
 
     def __init__(self):
-        self.verbosity = Verbosity.VERBOSE.value
+        self.verbosity = lib.constants.DEFAULT_VERBOSITY
         self.host = lib.constants.DEFAULT_SERVER_IP
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
@@ -82,11 +82,11 @@ def main():
                 )
             return
         elif argv[i] == ClientFlags.VERBOSE.value or argv[i] == ClientFlags.VERBOSEL.value:
-            flags.verbosity = Verbosity.VERBOSE
+            flags.verbosity = lib.constants.VERBOSE
             i += 1
 
         elif argv[i] == ClientFlags.QUIET.value or argv[i] == ClientFlags.QUIETL.value:
-            flags.verbosity = Verbosity.QUIET
+            flags.verbosity = lib.constants.QUIET
             i += 1
 
         elif argv[i] == ClientFlags.HOST.value or argv[i] == ClientFlags.HOSTL.value:

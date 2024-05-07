@@ -75,9 +75,6 @@ MENSAJEACEPTARCONECCION= b"SYNACK"
 # Para sacar el packet loss
 # sudo tc qdisc del dev <interface_name> root
 
-class Verbosity(Enum):
-    VERBOSE = 0
-    QUIET = 1
 
 class ClientFlags(Enum):
     VERBOSE = "-v"
@@ -116,16 +113,19 @@ class ServerFlags(Enum):
     PORT = "-p"
     STORAGE = "-s"
 
+VERBOSE = True
+QUIET = False
 
 ## SERVER DEFAULT VALUES
 DEFAULT_SERVER_IP = "127.0.0.1"
 DEFAULT_SERVER_PORT = 5005
 DEFAULT_SERVER_STORAGE = "data/server"
-DEFAULT_SERVER_VERBOSITY = Verbosity.VERBOSE
+DEFAULT_SERVER_VERBOSITY = VERBOSE
+
 
 ### CLIENT DEFAULT VALUES
 DEFAULT_CLIENT_IP = "127.0.0.2"
-DEFAULT_CLIENT_VERBOSITY = Verbosity.VERBOSE
+DEFAULT_CLIENT_VERBOSITY = VERBOSE
 
 
 # COLORS
@@ -153,3 +153,8 @@ ENDC = '\033[0m'
         puerto = 5555
 
 """
+
+def pretty_print(mensaje:str, is_verbose:bool):    
+    if is_verbose == QUIET:
+        return
+    print(mensaje)
