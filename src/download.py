@@ -2,7 +2,7 @@ from lib.SocketRDT import SocketRDT
 from lib.SocketRDT import ConnectionTimedOutError
 import lib.ProtocoloFS
 from sys import argv
-from lib.constants import Verbosity, ClientFlags
+from lib.constants import ClientFlags
 import lib.constants
 
 class downloader_flags:

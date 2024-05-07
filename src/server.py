@@ -94,7 +94,7 @@ class Server:
             print(mensaje)
             while seguir_corriendo.estado:
                 
-                lib.constants.pretty_print(mensaje, self.flags.verbose)                
+                lib.constants.pretty_print(mensaje, self.flags.verbosity)                
                 
                 try: 
                     paquete, addr  = self.recieveSocket.acceptConnection() # Añadir modo (verbose, quiet)

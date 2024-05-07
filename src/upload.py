@@ -17,7 +17,7 @@ class uploader_flags:
     name: str
 
     def __init__(self):
-        self.verbosity = lib.constants.DEFAULT_VERBOSITY
+        self.verbosity = lib.constants.DEFAULT_CLIENT_VERBOSITY
         self.host = lib.constants.DEFAULT_SERVER_IP
         self.port = lib.constants.DEFAULT_SERVER_PORT
         self.myIp = lib.constants.DEFAULT_CLIENT_IP
