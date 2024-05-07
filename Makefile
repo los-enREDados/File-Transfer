@@ -2,6 +2,7 @@ LOOPBACK    := $(shell ls -l /sys/class/net/ | grep virtual | grep -v docker | a
 PERDIDA     := 50
 ARCHIVO     := data/archivosParaEnviar/azul.jpeg
 INTERPRETER := python3
+LATEX       := pdflatex -synctex=1
 
 ifeq ("$(RELEASE)", "debug")
 INTERPRETER = pudb
@@ -47,5 +48,9 @@ mostrarPerdida:
 
 installPlugin:
 	./installPlugin.sh
+
+latex:
+	$(LATEX) --shell-escape informe/informe.tex
+	mv Informe.pdf informe/Informe.pdf
 
 .PHONY: server upload download
