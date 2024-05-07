@@ -85,8 +85,7 @@ A su vez, debido a la arquitectura cliente y servidor, el socket debería ser ca
 
 Por otro lado, con respecto a las metodologías de envío y recepción de paquetes: Selective Repeat y Stop and Wait, se asume que SR iba a ganarle en la mayoría de los casos a SW, debido a que SR implementa lo que se conoce como : pipelining.
 
-\section{\texorpdfstring{\textbf{Implementación
-WIP}}{Implementación}}\label{implementaciuxf3n-wip}
+\section{\texorpdfstring{\textbf{Implementación}}{Implementación}}\label{implementaciuxf3n-wip}
 
 \subsection{Arquitectura Cliente-Servidor}\label{arquitectura-cliente-servidor}
 
@@ -188,8 +187,7 @@ Una de las principales funciones de las que deben encargarse los protocolos a ni
 
 Una consecuencia directa del modelo de capas es que las aplicaciones pueden abstraerse de estar corriendo en hosts separados por kilómetros de distancia ya que simplemente relegan el envío y recibo de datos a la capa de transporte, que apoyándose en las capas siguientes, se encargan de que los datos se transmitan entre host y host.
 
-\subsection{\texorpdfstring{\textbf{3. Detalle el protocolo de
-aplicación desarrollado en este trabajo.}}{3. Detalle el protocolo de aplicación desarrollado en este trabajo.}}\label{detalle-el-protocolo-de-aplicaciuxf3n-desarrollado-en-este-trabajo.}
+\subsection{\texorpdfstring{\textbf{3. Detalle el protocolo de aplicación desarrollado en este trabajo.}}{3. Detalle el protocolo de aplicación desarrollado en este trabajo.}}\label{detalle-el-protocolo-de-aplicaciuxf3n-desarrollado-en-este-trabajo.}
 
 Nuestro protocolo de aplicación es una wrapper fino para nuestra implementación de Socket. No hay procesamiento adicional a los archivos, más allá de transformarlos a tiras de bytes.
 
@@ -210,22 +208,19 @@ A nivel mensaje, cada archivo se parte en varios paquetes. Cada paquete tiene co
   Flag de error
 \end{itemize}
 
-Los otros 504 bytes son dedicados al payload.
+Los otros 504 bytes son dedicados al payload. Notar que el sequence number se utiliza tambien como campo para el acknowledge
 
-Durante el handshake, la flag de conexión está encendida y el cliente indica el tipo de conexión. Cuando comienza el envío de información la flag de conexión se pone en 0.
+Durante el handshake, la flag de conexión está encendida y el cliente indica el tipo de conexión con la flag de tipo. El servidor responde con un paquete que posee en su payload el puerto con el cual el cliente tiene que seguir la conversación. El cliente responde con un acknowledge final, indicando que recibió el puerto y que la conexión fue exitosa. En caso de timeouts, se asume que la conexión fue exitosa y se procede con la transferencia de archivos.
 
-Cuando la información termina, se enciende la flag de FIN.
+Cuando comienza el envío de información la flag de conexión se pone en 0. Luego se envian los paquetes con la tira de bytes del mismo en el payload con su sequence number correspondiente. El servidor responde con un acknowledge del paquete recibido. 
 
-En caso de que haya un error en la comunicación, se enciende la flag de error y la comunicación se cierra.
+Cuando la información termina, se enciende la flag de FIN y se envía un paquete con la flag de FIN encendida. El servidor responde con un acknowledge final. En caso de perdida del acknowledge final, al haber recibido todos los acknowledges anteriores correctamente se sabe que se reecibio todo correctamente por lo que se sigue de largo. 
 
-\subsection{\texorpdfstring{\textbf{4. La capa de transporte del stack
-TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos
-protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado
-utilizar cada
-uno?}}{4. La capa de transporte del stack TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado utilizar cada uno?}}\label{la-capa-de-transporte-del-stack-tcpip-ofrece-dos-protocolos-tcp-y-udp.-quuxe9-servicios-proveen-dichos-protocolos-cuuxe1les-son-sus-caracteruxedsticas-cuuxe1ndo-es-apropiado-utilizar-cada-uno}
+En caso de que haya un error en la comunicación, se enciende la flag de error y la comunicación y se envia un paquete vacio. Cuando se detecta un paquete con un error se levanta la excepción y se termina la comunicación.
 
-TCP:
+\subsection{\texorpdfstring{\textbf{4. La capa de transporte del stack TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado utilizar cada uno?}}{4. La capa de transporte del stack TCP/IP ofrece dos protocolos: TCP y UDP. ¿Qué servicios proveen dichos protocolos? ¿Cuáles son sus características? ¿Cuándo es apropiado utilizar cada uno?}}\label{la-capa-de-transporte-del-stack-tcpip-ofrece-dos-protocolos-tcp-y-udp.-quuxe9-servicios-proveen-dichos-protocolos-cuuxe1les-son-sus-caracteruxedsticas-cuuxe1ndo-es-apropiado-utilizar-cada-uno}
 
+\subsubsection{TCP}
 \begin{itemize}
 \item
   \textbf{Confiabilidad}: garantiza la entrega de datos, en orden, y sin errores.
@@ -239,8 +234,8 @@ TCP:
   Tiene \textbf{mayor complejidad} que UDP debido a la gestión de la conexión, por lo que tiene una demora significativa para enviar y recibir información. Por esto, conviene utilizar TCP cuando se necesite una transmisión de datos confiable, por sobre la transmisión rápida.
 \end{itemize}
 
-UDP:
-
+\subsubsection{
+}UD
 \begin{itemize}
 \item
   \textbf{No hay confiabilidad:} no se garantiza la entrega de datos, ni el orden en que lleguen
@@ -255,21 +250,23 @@ UDP:
 \section{\texorpdfstring{\textbf{Dificultades
 encontradas}}{Dificultades encontradas}}\label{dificultades-encontradas}
 
-Una de las principales dificultades que encontramos fue lograr que el handshake fuese reliable. Una vez ``pasada la barrera del handshake'', el protocolo funcionaba sin muchos problemas (incluso con pérdida).
+Una de las principales dificultades que encontramos fue lograr que el handshake fuese reliable debido al problema de los dos generales.
 
-Para solucionar esto, tuvimos que asegurarnos de que cada uno de los mensajes del handshake (syn, synack, ack) llegasen de forma reliable.
+Para solucionar esto tuvimos que asumir que despues de n perdidas seguidas, la conexion fue exitosa; y que simplemente se perdio el acknowledge final. Del lado del cliente entonces, se envia este acknowledge una sola vez (sin verifiacion de un recibimiento). 
+En caso de que el handshake no fue exitoso, tendriamos un error de timeout a la hora de envio o recibimiento del archivo.
 
 Otro problema del handshake, es que no se podía crear el socket en el puerto antes de terminar el handshake. Esto se debía a que, si se perdía el paquete de synack, el cliente no iba a poder saber el nuevo puerto con el que tiene que hablar e iba a saltar timeout. La resolución de esto fue tratar el handshake en el puerto del servidor.
 
-\section{\texorpdfstring{\textbf{Conclusión
-WIP}}{Conclusión}}\label{conclusiuxf3n-wip}
+Una vez ``pasada la barrera del handshake'', el protocolo funcionaba sin muchos problemas (incluso con pérdida); debido a que utilizabamos la metodologia descripta por la bibliografía.
 
-A la hora de enviar archivos nos topamos con el límite de tamaño de 4GB debido a que para enviar un int hicimos uso de htonl, la cual manda hasta un long de uint32.
+Sin embargo, tuvimos un problema similar al del handshake a la hora de finalizar la conversación. El caso borde donde el ack final se perdia implicaba que no podiamos tener un envio/descarga reliable. Para solucionar esto, similarmente, aplicamos una metodologia de timeouts. 
 
-
-
+\section{\texorpdfstring{\textbf{Conclusión}}{Conclusión}}\label{conclusiuxf3n-wip}
 Basándonos en la bibliografía, suponíamos que la metodología ``Selective Repeat'' iba a ser más eficiente que ``Stop and Wait''. Ya que ``Stop and Wait'' no hacía provecho de un buffer para almacenar paquetes fuera de orden.
+Sin embargo, resultó que el tamaño de la ventana en ``Selective Repeat'' es un factor que influye bastante en la eficiencia del mismo. Y que incluso, dado una ventana muy grande y timeouts muy cortos, ``Selective Repeat'' puede terminar siendo menos eficiente que ``Stop and Wait''.
 
-Sin embargo, resultó que el tamaño de la ventana en ``Selective Repeat'' es un factor que influye bastante en la eficiencia del mismo. Y que incluso, dado una ventana muy grande y timeouts muy cortos;siempre ``Selective Repeat'' puede terminar siendo menos eficiente que ``Stop and Wait''.
+Esto se pone aun mas en evidencia al ver las ejecuciones sin perdida de paquetes, ya que ``Selective Repeat'' tiene mucho mas procesamiento que realizar que ``Stop and Wait''. Sin embargo, como se vio en las pruebas en las ejecuciones con perdida de paquetes, ``Selective Repeat'' es mucho mas eficiente que ``Stop and Wait''.
 
+
+Ademas, debido a que UDP provee servicios de chequeo de errores; no tuvimos que lidiar con casos en donde los paquetes se corrumpiecen a mitad de camino. Estos casos son dropeados por UDP y se tratan como paquetes que son perdidos en los enlaces.
 \end{document}
