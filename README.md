@@ -66,5 +66,17 @@ WARNING: Posiblemente necesita permisos de root
 make sacarPerdida
 ```
 
+### Mininet
+Para correr mininet con la topologia ya configurada:
+
+WARNING: Posiblemente necesita permisos de root
+```
+mn --custom src/lib/mininet.py --topo mytopo
+```
+
+La topogia consta de 4 hosts y 1 switch. Los hosts son h1, h2, h3 y h4. El switch es s1.
+
+Hay perdida configuarada entre s1 y h3 de 10% y entre s1 y h4 de 40%.
+
 ## Bibliografía
 - https://wiki.python.org/moin/UdpCommunication
