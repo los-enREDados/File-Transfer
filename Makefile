@@ -30,6 +30,11 @@ upload:
 download:
 	$(INTERPRETER) src/download.py -n $(ARCHIVO)
 
+crearDirs:
+	mkdir data/cliente/ || true
+	mkdir data/server/ || true
+	@echo "Directorios default creados con exito!"
+
 server:
 	$(INTERPRETER) src/server.py
 
