@@ -59,7 +59,6 @@ def upload(flags):
     except ConnectionTimedOutError as e:
         print(e)
         return
-    
 
     print(
         f"\033[95mSubiendo {flags.name} a {flags.myIp}:{serverSCK.myAddress[1]}")
