@@ -59,10 +59,10 @@ def upload(flags):
     except ConnectionTimedOutError as e:
         print(e)
         return
+    
 
-    pretty_print(
-        f"\033[95mSubiendo {flags.name} a {flags.myIp}:{serverSCK.myAddress[1]}",
-        flags.verbosity)
+    print(
+        f"\033[95mSubiendo {flags.name} a {flags.myIp}:{serverSCK.myAddress[1]}")
     # NOTE: Si no tiene el "/" final, se la anado
     try:
         if flags.src[-1] != "/":

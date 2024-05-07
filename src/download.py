@@ -54,9 +54,8 @@ def download(flags: downloader_flags):
 
     try:
         serverSCK.connect(lib.constants.DOWNLOAD, flags.name)
-        pretty_print(
-            f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}",
-            flags.verbosity)
+        print(
+            f"\033[95mDescargando {flags.name} de {flags.myIp}:{serverSCK.myAddress[1]}")
         archivo = lib.ProtocoloFS.recibirArchivo(serverSCK)
 
     except AttributeError as e:
