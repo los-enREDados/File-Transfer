@@ -7,6 +7,9 @@ ifeq ("$(RELEASE)", "debug")
 INTERPRETER = pudb
 endif
 
+default:
+	@echo "Correr make con alguna flag"
+
 stopAndWait:
 	sed -i 's/TIPODEPROTOCOLO = ".."/TIPODEPROTOCOLO = "SW"/' src/lib/constants.py
 
@@ -38,6 +41,9 @@ crearPerdida:
 
 sacarPerdida:
 	tc qdisc del dev $(LOOPBACK) root
+
+mostrarPerdida:
+	tc qdisc show dev $(LOOPBACK)
 
 installPlugin:
 	./installPlugin.sh
