@@ -4,7 +4,7 @@ local rdt_ft = Proto.new("RDT-FT",  "Reliable File Transfer")
 
 local field_seqNum = ProtoField.int32("RDT-FT.seqNum", "Sequence Number")
 local field_connect = ProtoField.int8("RDT-FT.connect", "Bit connect", base.DEC)
-local field_tipo = ProtoField.int8("RDT-FT.fin", "Bit tipo", base.DEC)
+local field_tipo = ProtoField.string("RDT-FT.fin", "Tipo conexion")
 local field_fin = ProtoField.int8("RDT-FT.fin", "Bit fin", base.DEC)
 local field_error = ProtoField.int8("RDT-FT.error", "Bit error", base.DEC)
 local field_payload = ProtoField.bytes("RDT-FT.payload", "Payload")
@@ -37,7 +37,12 @@ function rdt_ft.dissector(buffer, pinfo, tree)
   local tipo_pos = connect_pos + connect_len
   local tipo_len = 1 
   local tipo_buffer = buffer(tipo_pos, tipo_len)
-  payload_tree:add(field_tipo, tipo_buffer)
+  local tipo_table = {}
+  tipo_table[0] = "Download"
+  tipo_table[1] = "Upload"
+  local tipo_valor = tipo_buffer:uint()
+  local tipo_string = tipo_table[tipo_valor]
+  payload_tree:add(field_tipo, tipo_string)
 
   local fin_pos = tipo_pos + tipo_len
   local fin_len = 1 
